@@ -1,7 +1,7 @@
+from rtc import RTC
+from display import Display
 from scheduler import Scheduler
 scheduler = Scheduler()
-from display import Display
-dis= Display(scheduler)
+dis = Display(scheduler)
 scheduler.start()
-from rtc import RTC
-clock=RTC()
+clock = RTC()

@@ -71,7 +71,8 @@ class Buttons:
                     button.state = STATE_UNPRESSED
                     tm = time.ticks_ms()
                     press_duration = time.ticks_diff(tm, button.pressed)
-                    print("Button %d pressed for %dms" % (button.number, press_duration))
+                    print("Button %d pressed for %dms" %
+                          (button.number, press_duration))
                     for callback in button.callbacks:
                         if callback.min < press_duration and (
                                 callback.max == -1 or press_duration <= callback.max):

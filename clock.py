@@ -45,4 +45,3 @@ class Clock(App):
 
     def backlight_callback(self, t):
         self.display.switch_backlight()
-
