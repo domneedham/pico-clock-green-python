@@ -7,7 +7,8 @@ from datetime import datetime
 from pathlib import Path
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--device', action='store_true', default="/dev/ttyACM0")
+parser.add_argument('--device', action='store_true',
+                    default="/dev/cu.usbmodem146101")
 args = parser.parse_args()
 
 CURRENT_DIR = Path(__file__).parent
@@ -23,7 +24,8 @@ for file in os.listdir(CURRENT_DIR):
     if file.split(".")[-1] == "py":
         if datetime.utcfromtimestamp(os.path.getmtime(CURRENT_DIR.joinpath(file))) > LASTRUN:
             print(f"copy: {file}")
-            subprocess.run(["ampy", "--port", args.device, "put", file, f"/{file}"])
+            subprocess.run(
+                ["ampy", "--port", args.device, "put", file, f"/{file}"])
         else:
             print(f"up to date: {file}")
 
