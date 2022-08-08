@@ -3,6 +3,7 @@ import argparse
 import contextlib
 import os
 import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -20,13 +21,24 @@ with contextlib.suppress(FileNotFoundError):
 with open("LASTRUN", "w") as last_run_file:
     last_run_file.write(NOW.strftime("%s"))
 
+found_config = False
 for file in os.listdir(CURRENT_DIR):
     if file.split(".")[-1] == "py":
+        if file == "configuration.py":
+            found_config = True
+
         if datetime.utcfromtimestamp(os.path.getmtime(CURRENT_DIR.joinpath(file))) > LASTRUN:
             print(f"copy: {file}")
             subprocess.run(
                 ["ampy", "--port", args.device, "put", file, f"/{file}"])
         else:
             print(f"up to date: {file}")
+
+if not found_config:
+    print("You need to create a configuration.py file. See the README.")
+    sys.exit("No configuration.py file found")
+
+print("Uploaded code")
+print("")
 
 subprocess.run(["ampy", "--port", args.device, "run", "main.py"])

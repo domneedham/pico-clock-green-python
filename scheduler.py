@@ -10,14 +10,13 @@ class Scheduler:
             self.callback = callback
             self.lastrun = time.ticks_ms()
 
-    count = 0
-
     def __init__(self):
         self.schedules = []
 
     def start(self):
-        self.start = time.ticks_ms()
-        self.timer = Timer(period=1, callback=self.event_callback)
+        self.timer = Timer(-1)
+        self.timer.init(period=1, mode=Timer.PERIODIC,
+                        callback=self.event_callback)
 
     def schedule(self, name, duration, callback):
         self.schedules.append(self.Schedule(name, duration, callback))
