@@ -1,4 +1,5 @@
 from machine import Pin, ADC
+from mqtt import MQTT
 
 from util import singleton
 from utime import sleep_us
@@ -28,6 +29,7 @@ class Display:
         self.initialise_icons()
 
         self.scheduler = scheduler
+        self.mqtt = MQTT(scheduler)
 
         # CPU freq needs to be increase to 250 for better results
         # From 10 (low) to 1500(High)
@@ -186,13 +188,13 @@ class Display:
             "Sun": self.Icon(21, 0, width=2),
         }
     day_of_week = {
-        0: "Sun",
-        1: "Mon",
-        2: "Tue",
-        3: "Wed",
-        4: "Thur",
-        5: "Fri",
-        6: "Sat"
+        0: "Mon",
+        1: "Tue",
+        2: "Wed",
+        3: "Thur",
+        4: "Fri",
+        5: "Sat",
+        6: "Sun"
     }
 
     def show_day(self, int):

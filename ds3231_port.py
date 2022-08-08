@@ -66,7 +66,7 @@ class DS3231:
         else:
             YY += 1900
         # Time from DS3231 in time.localtime() format (less yday)
-        result = YY, MM, DD, hh, mm, ss, wday - 1, 0
+        result = YY, MM, DD, hh, mm, ss, wday, 0
         if set_rtc:
             if rtc is None:
                 # Best we can do is to set local time
@@ -83,7 +83,7 @@ class DS3231:
         self.ds3231.writeto_mem(DS3231_I2C_ADDR, 2, tobytes(
             dec2bcd(hh)))  # Sets to 24hr mode
         self.ds3231.writeto_mem(DS3231_I2C_ADDR, 3, tobytes(
-            dec2bcd(wday + 1)))  # 1 == Monday, 7 == Sunday
+            dec2bcd(wday)))  # 0 == Monday, 6 == Sunday
         self.ds3231.writeto_mem(DS3231_I2C_ADDR, 4, tobytes(
             dec2bcd(mday)))  # Day of month
         if YY >= 2000:
@@ -107,7 +107,7 @@ class DS3231:
     # Test hardware RTC against DS3231. Default runtime 10 min. Return amount
     # by which DS3231 clock leads RTC in PPM or seconds per year.
     # Precision is achieved by starting and ending the measurement on DS3231
-    # one-second boundaries and using ticks_ms() to time the RTC.
+    # one-seond boundaries and using ticks_ms() to time the RTC.
     # For a 10 minute measurement +-1ms corresponds to 1.7ppm or 53s/yr. Longer
     # runtimes improve this, but the DS3231 is "only" good for +-2ppm over 0-40C.
     def rtc_test(self, runtime=600, ppm=False, verbose=True):
@@ -126,7 +126,7 @@ class DS3231:
         ds3231_start = utime.mktime(self.convert())
         t = rtc.datetime()
         rtc_start = utime.mktime(
-            (t[0], t[1], t[2], t[4], t[5], t[6], t[3] - 1, 0))  # y m d h m s wday 0
+            (t[0], t[1], t[2], t[4], t[5], t[6], t[3], 0))  # y m d h m s wday 0
 
         utime.sleep(runtime)  # Wait a while (precision doesn't matter)
 
@@ -140,8 +140,7 @@ class DS3231:
         ds3231_end = utime.mktime(self.convert())
         t = rtc.datetime()
         # y m d h m s wday 0
-        rtc_end = utime.mktime(
-            (t[0], t[1], t[2], t[4], t[5], t[6], t[3] - 1, 0))
+        rtc_end = utime.mktime((t[0], t[1], t[2], t[4], t[5], t[6], t[3], 0))
 
         d_rtc = 1000 * (rtc_end - rtc_start) + de - ds  # ms recorded by RTC
         d_ds3231 = 1000 * (ds3231_end - ds3231_start)  # ms recorded by DS3231

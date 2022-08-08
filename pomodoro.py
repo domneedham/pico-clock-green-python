@@ -5,13 +5,13 @@ from display import Display
 from speaker import Speaker
 
 
-class Pomodoro:
+class Pomodoro(App):
     def __init__(self, scheduler):
         App.__init__(self, "Pomodoro", "pomod")
         self.display = Display(scheduler)
         self.speaker = Speaker(scheduler)
         self.scheduler = scheduler
-        self.buttons = Buttons()
+        self.buttons = Buttons(scheduler)
         self.enabled = False
         self.started = False
         self.start_time = None

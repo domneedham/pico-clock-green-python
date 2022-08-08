@@ -1,5 +1,6 @@
 import time
 import json
+from scheduler import Scheduler
 from umqtt.simple import MQTTClient
 from configuration import mqtt_server, mqtt_prefix, mqtt_base_topic
 from util import singleton
@@ -17,7 +18,7 @@ class MQTT:
             self.name = name
             self.callback = callback
 
-    def __init__(self, scheduler):
+    def __init__(self, scheduler: Scheduler):
         self.scheduler = scheduler
         self.lastping = 0
         self.registered_callbacks = []
