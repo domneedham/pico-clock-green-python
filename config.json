@@ -1,0 +1,18 @@
+{
+  "runConfig": {
+    "blinkTimeColon": false,
+    "temp": "c",
+    "clockType": "24",
+    "autolight": false
+  },
+  "wifiConfig": {
+    "enabled": false,
+    "ssid": "",
+    "passphrase": ""
+  },
+  "mqttConfig": {
+    "enabled": false,
+    "broker": "",
+    "prefix": ""
+  }
+}

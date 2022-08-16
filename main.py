@@ -7,6 +7,7 @@ from temperature import Temperature
 from time_set import TimeSet
 from wifi import WLAN
 from mqtt import MQTT
+from configuration import Configuration
 import machine
 
 
@@ -23,6 +24,8 @@ print("PICO CLOCK")
 print("-" * 10)
 
 print("Configuring...")
+config = Configuration()
+
 scheduler = Scheduler()
 wlan = WLAN(scheduler)
 mqtt = MQTT(scheduler)

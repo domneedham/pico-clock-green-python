@@ -1,8 +1,9 @@
 from machine import Pin, ADC
-from mqtt import MQTT
 
 from util import singleton
 from utime import sleep_us
+from configuration import Configuration
+import helpers
 
 
 @singleton
@@ -27,33 +28,27 @@ class Display:
         self.disp_offset = 2
         self.initialise_fonts()
         self.initialise_icons()
+        self.initialise_days()
 
         self.scheduler = scheduler
-        self.mqtt = MQTT(scheduler)
+        self.config = Configuration()
 
-        # CPU freq needs to be increase to 250 for better results
-        # From 10 (low) to 1500(High)
-        self.backlight_sleep = [10, 100, 300, 1500]
-        self.current_backlight = 3
-        self.auto_backlight = True
-        self.show_icon("AutoLight")
-        self.update_auto_backlight_value(None)
+        self.initialise_backlight()
+        self.show_temperature_icon()
         self.scheduler.schedule("enable-leds", 1, self.enable_leds)
-        self.scheduler.schedule(
-            "update_auto_backlight_value", 1000, self.update_auto_backlight_value)
 
     def enable_leds(self, t):
         self.count += 1
         self.row = (self.row + 1) % 8
         led_row = self.leds[self.row]
-        if True:
-            for col in range(32):
-                self.clk.value(0)
-                self.sdi.value(led_row[col])
-                self.clk.value(1)
-            self.le.value(1)
-            self.le.value(0)
-            self.leds_changed = False
+
+        for col in range(32):
+            self.clk.value(0)
+            self.sdi.value(led_row[col])
+            self.clk.value(1)
+        self.le.value(1)
+        self.le.value(0)
+        self.leds_changed = False
 
         self.a0.value(1 if self.row & 0x01 else 0)
         self.a1.value(1 if self.row & 0x02 else 0)
@@ -62,10 +57,33 @@ class Display:
         sleep_us(self.backlight_sleep[self.current_backlight])
         self.oe.value(1)
 
+    def show_led(self):
+        for row in range(8):
+            # self.row = (self.row + 1) % 8
+            led_row = self.leds[row]
+
+            for col in range(32):
+                # self.clk.value(0)
+                self.sdi.value(led_row[col])
+                # self.clk.value(1)
+            self.le.value(1)
+            # self.le.value(0)
+            # self.leds_changed = False
+
+            self.a0.value(1 if row & 0x01 else 0)
+            self.a1.value(1 if row & 0x02 else 0)
+            self.a2.value(1 if row & 0x04 else 0)
+            # self.oe.value(0)
+            # sleep_us(self.backlight_sleep[self.current_backlight])
+            self.oe.value(1)
+
     def clear(self, x=0, y=0, w=24, h=7):
         for yy in range(y, y + h + 1):
             for xx in range(x, x + w + 1):
                 self.leds[yy][xx] = 0
+
+    def clear_text(self):
+        self.clear(x=2, y=1, w=24, h=6)
 
     def show_char(self, character, pos):
         pos += self.disp_offset  # Plus the offset of the status indicator
@@ -75,8 +93,10 @@ class Display:
             for col in range(0, char.width):
                 self.leds[row][pos + col] = (byte >> col) % 2
         self.leds_changed = True
+        # self.show_led()
 
     def show_text(self, text, pos=0):
+        self.clear_text()
         i = 0
         while i < len(text):
             if text[i:i + 2] in self.ziku:
@@ -89,18 +109,21 @@ class Display:
             self.show_char(c, pos)
             width = self.ziku[c].width
             pos += width + 1
+        # self.show_led()
 
     def show_icon(self, name):
         icon = self.Icons[name]
         for w in range(icon.width):
             self.leds[icon.y][icon.x + w] = 1
         self.leds_changed = True
+        # self.show_led()
 
     def hide_icon(self, name):
         icon = self.Icons[name]
         for w in range(icon.width):
             self.leds[icon.y][icon.x + w] = 0
         self.leds_changed = True
+        # self.show_led()
 
     def sidelight_on(self):
         self.leds[0][2] = 1
@@ -116,25 +139,46 @@ class Display:
             self.hide_icon("AutoLight")
             self.current_backlight = 0
             self.scheduler.remove("update_auto_backlight_value")
+            self.config.update_autolight_value(False)
         elif self.current_backlight == 3:
             self.show_icon("AutoLight")
             self.auto_backlight = True
             self.update_auto_backlight_value(None)
             self.scheduler.schedule(
                 "update_auto_backlight_value", 1000, self.update_auto_backlight_value)
+            self.config.update_autolight_value(True)
         else:
             self.current_backlight += 1
 
+    def initialise_backlight(self):
+        # CPU freq needs to be increase to 250 for better results
+        # From 10 (low) to 1500(High)
+        self.backlight_sleep = [10, 100, 300, 1500]
+        self.current_backlight = 3
+        self.auto_backlight = self.config.autolight
+        self.update_auto_backlight_value(None)
+
+        if self.auto_backlight:
+            self.show_icon("AutoLight")
+            self.scheduler.schedule(
+                "update_auto_backlight_value", 1000, self.update_auto_backlight_value)
+
     def update_auto_backlight_value(self, t):
         aim = self.ain.read_u16()
-        if aim > 60000:  # Low light
+        if aim > 65000:  # Low light
             self.current_backlight = 0
-        elif aim > 58000:
+        elif aim > 60000:
             self.current_backlight = 1
         elif aim > 40000:
             self.current_backlight = 2
         else:
             self.current_backlight = 3
+
+    def show_temperature_icon(self):
+        if self.config.temp == "c":
+            self.show_icon("°C")
+        else:
+            self.show_icon("°F")
 
     def print(self):
         for row in range(0, 8):
@@ -187,19 +231,35 @@ class Display:
             "Sat": self.Icon(18, 0, width=2),
             "Sun": self.Icon(21, 0, width=2),
         }
-    day_of_week = {
-        0: "Mon",
-        1: "Tue",
-        2: "Wed",
-        3: "Thur",
-        4: "Fri",
-        5: "Sat",
-        6: "Sun"
-    }
+
+    def initialise_days(self):
+        self.days_of_week = {
+            1: "Mon",
+            2: "Tue",
+            3: "Wed",
+            4: "Thur",
+            5: "Fri",
+            6: "Sat",
+            7: "Sun"
+        }
 
     def show_day(self, int):
-        self.clear()
-        self.show_icon(self.day_of_week[int])
+        for key in self.days_of_week:
+
+            if key == int:
+                self.show_icon(self.days_of_week[key])
+            else:
+                self.hide_icon(self.days_of_week[key])
+
+    def show_temperature(self, temp):
+        symbol = ""
+        if self.config.temp == "c":
+            symbol = "°C"
+        else:
+            temp = helpers.convert_celsius_to_temperature(temp)
+            symbol = "°F"
+        temp = str(round(temp))
+        self.show_text(temp + symbol)
 
     # Derived from c code created by yufu on 2021/1/23.
     # Modulus method: negative code, reverse, line by line, 4X7 font
@@ -222,57 +282,40 @@ class Display:
             "D": self.Character(width=4, rows=[0x07, 0x09, 0x09, 0x09, 0x09, 0x09, 0x07]),
             "E": self.Character(width=4, rows=[0x0F, 0x01, 0x01, 0x0F, 0x01, 0x01, 0x0F]),
             "F": self.Character(width=4, rows=[0x0F, 0x01, 0x01, 0x0F, 0x01, 0x01, 0x01]),
-            "G": self.Character(width=4, rows=[0x06, 0x09, 0x01, 0x0D, 0x09, 0x09, 0x06]),
             "H": self.Character(width=4, rows=[0x09, 0x09, 0x09, 0x0F, 0x09, 0x09, 0x09]),
-            "I": self.Character(width=3, rows=[0x07, 0x02, 0x02, 0x02, 0x02, 0x02, 0x07]),
-            "J": self.Character(width=4, rows=[0x0F, 0x08, 0x08, 0x08, 0x09, 0x09, 0x06]),
-            "K": self.Character(width=4, rows=[0x09, 0x05, 0x03, 0x01, 0x03, 0x05, 0x09]),
             "L": self.Character(width=4, rows=[0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x0F]),
-            # 5×7
-            "M": self.Character(width=4, rows=[0x00, 0x11, 0x1B, 0x15, 0x11, 0x11, 0x11, 0x11]),
             "N": self.Character(width=4, rows=[0x09, 0x09, 0x0B, 0x0D, 0x09, 0x09, 0x09]),
-            "O": self.Character(width=4, rows=[0x06, 0x09, 0x09, 0x09, 0x09, 0x09, 0x06]),
+            "O": self.Character(width=4, rows=[0x0F, 0x09, 0x09, 0x09, 0x09, 0x09, 0x0F]),
             "P": self.Character(width=4, rows=[0x07, 0x09, 0x09, 0x07, 0x01, 0x01, 0x01]),
-            # Q
-            "Q": self.Character(width=5, rows=[0x0E, 0x11, 0x11, 0x11, 0x15, 0x19, 0x0E]),
-            # R
-            "R": self.Character(width=4, rows=[0x07, 0x09, 0x09, 0x07, 0x03, 0x05, 0x09]),
-            # S
-            "S": self.Character(width=4, rows=[0x06, 0x09, 0x02, 0x04, 0x08, 0x09, 0x06]),
-            # 5×7
-            "T": self.Character(width=5, rows=[0x1F, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04]),
             "U": self.Character(width=4, rows=[0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x06]),
-            # 5×7
-            "V": self.Character(width=5, rows=[0x11, 0x11, 0x11, 0x11, 0x11, 0x0A, 0x04]),
-            # 5×7
-            "W": self.Character(width=5, rows=[0x11, 0x11, 0x11, 0x15, 0x15, 0x1B, 0x11]),
-            # 5*7
-            "Y": self.Character(width=4, rows=[0x1F, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04]),
-            # 4×7
-            "Z": self.Character(width=4, rows=[0x0F, 0x08, 0x04, 0x02, 0x01, 0x0F, 0x00]),
-
             # 2×7
             ":": self.Character(width=2, rows=[0x00, 0x03, 0x03, 0x00, 0x03, 0x03, 0x00]),
             # colon width space
             " :": self.Character(width=2, rows=[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]),
-            # celcuis 5×7
-            "°C": self.Character(width=4, rows=[0x01, 0x0C, 0x12, 0x02, 0x02, 0x12, 0x0C]),
-            # farenheit
-            "°F": self.Character(width=4, rows=[0x01, 0x1E, 0x02, 0x1E, 0x02, 0x02, 0x02]),
+            "°": self.Character(width=2, rows=[0x03, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00]),
+            # celsius 5×7                       0x06, 0x09, 0x01, 0x01, 0x01, 0x09, 0x06
+            # "°C": self.Character(width=5, rows=[0x01, 0x0E, 0x12, 0x02, 0x02, 0x12, 0x0C]),
+            # fahrenheit
+            # "°F": self.Character(width=4, rows=[0x01, 0x1E, 0x02, 0x1E, 0x02, 0x02, 0x02]),
             # space
             " ": self.Character(width=4, rows=[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]),
-
+            # 5*7
+            "Y": self.Character(width=4, rows=[0x1F, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04]),
             # 1×7
             ".": self.Character(width=1, rows=[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01]),
             # 2×7
             "-": self.Character(width=2, rows=[0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00]),
-
+            # 5×7
+            "M": self.Character(width=4, rows=[0x00, 0x11, 0x1B, 0x15, 0x11, 0x11, 0x11, 0x11]),
             # 3×7
             "/": self.Character(width=2, rows=[0x02, 0x02, 0x02, 0x01, 0x01, 0x01, 0x01, 0x01]),
             # 5×7
             "°C2": self.Character(width=4, rows=[0x00, 0x01, 0x0C, 0x12, 0x02, 0x02, 0x12, 0x0C]),
             "°F2": self.Character(width=4, rows=[0x00, 0x01, 0x1E, 0x02, 0x1E, 0x02, 0x02, 0x02]),
-
+            # 5×7
+            "V": self.Character(width=5, rows=[0x11, 0x11, 0x11, 0x11, 0x11, 0x0A, 0x04]),
+            # 5×7
+            "W": self.Character(width=5, rows=[0x11, 0x11, 0x11, 0x15, 0x15, 0x1B, 0x11]),
         }
         self.digital_tube = {
             "0": [0x0F, 0x09, 0x09, 0x09, 0x09, 0x09, 0x0F],
@@ -297,17 +340,17 @@ class Display:
             "P": [0x0F, 0x09, 0x09, 0x0F, 0x01, 0x01, 0x01],
             "U": [0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x0F],
             ":": [0x00, 0x03, 0x03, 0x00, 0x03, 0x03, 0x00],  # 2×7
-            "°C": [0x01, 0x1E, 0x02, 0x02, 0x02, 0x02, 0x1E],  # celcius 5×7
-            "°F": [0x01, 0x1E, 0x02, 0x1E, 0x02, 0x02, 0x02],  # farenheit
+            "°C": [0x01, 0x1E, 0x02, 0x02, 0x02, 0x02, 0x1E],  # celsius 5×7
+            "°F": [0x01, 0x1E, 0x02, 0x1E, 0x02, 0x02, 0x02],  # fahrenheit
             " ": [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
             "T": [0x1F, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04],  # 5*7
             ".": [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],  # 2×7
             "-": [0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00],  # 2×7
             "M": [0x00, 0x11, 0x1B, 0x15, 0x11, 0x11, 0x11, 0x11],  # 5×7
             "/": [0x00, 0x04, 0x04, 0x02, 0x02, 0x02, 0x01, 0x01],  # 3×7
-            # celcuis 5x7
+            # celsius 5x7
             "°C2": [0x00, 0x01, 0x0C, 0x12, 0x02, 0x02, 0x12, 0x0C],
-            "°F2": [0x00, 0x01, 0x1E, 0x02, 0x1E, 0x02, 0x02, 0x02],  # farenheit
+            "°F2": [0x00, 0x01, 0x1E, 0x02, 0x1E, 0x02, 0x02, 0x02],  # fahrenheit
             "V": [0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x1F],  # 5×7
             "W": [0x11, 0x11, 0x11, 0x15, 0x15, 0x1B, 0x11],  # 5×7
         }

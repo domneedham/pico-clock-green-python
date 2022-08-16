@@ -1,5 +1,4 @@
-from machine import SoftI2C
-from machine import Pin
+from machine import Pin, SoftI2C
 from ds3231_port import DS3231
 from util import singleton
 
@@ -16,3 +15,8 @@ class RTC:
 
     def save_time(self, t):
         return self.ds.save_time(t)
+
+    def get_temperature(self):
+        temp = self.ds.get_temperature()
+        print(temp)
+        return temp

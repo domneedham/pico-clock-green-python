@@ -1,8 +1,8 @@
 import time
 import json
+from configuration import Configuration
 from scheduler import Scheduler
-from umqtt.simple import MQTTClient
-from configuration import mqtt_server, mqtt_prefix, mqtt_base_topic
+from configuration_old import mqtt_server, mqtt_prefix, mqtt_base_topic
 from util import singleton
 
 
@@ -23,20 +23,23 @@ class MQTT:
         self.lastping = 0
         self.registered_callbacks = []
         self.state_callbacks = []
-        self.client = MQTTClient(mqtt_prefix, mqtt_server, user=None,
-                                 password=None, keepalive=300, ssl=False, ssl_params={})
-        self.connect()
-        scheduler.schedule("mqtt-heartbeat", 250,
-                           self.scheduler_heartbeat_callback)
-        scheduler.schedule("mqtt-check", 1, self.scheduler_mqtt_callback)
-        scheduler.schedule("state", 60000, self.scheduler_mqtt_state)
+        self.configuration = Configuration().mqtt_config
+        if self.configuration.enabled:
+            from umqtt.simple import MQTTClient
+            self.client = MQTTClient(self.configuration.prefix, self.configuration.broker, user=None,
+                                     password=None, keepalive=300, ssl=False, ssl_params={})
+            self.connect()
+            scheduler.schedule("mqtt-heartbeat", 250,
+                               self.scheduler_heartbeat_callback)
+            scheduler.schedule("mqtt-check", 1, self.scheduler_mqtt_callback)
+            scheduler.schedule("state", 60000, self.scheduler_mqtt_state)
 
     def connect(self):
         print("Connecting to MQTT")
         self.client.connect()
         self.heartbeat(True)
         self.client.set_callback(self.mqtt_callback)
-        topic = mqtt_prefix + "#"
+        topic = self.configuration.prefix + "#"
         self.client.subscribe(topic)
         print("Subscribed to " + topic)
 

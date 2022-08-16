@@ -9,7 +9,7 @@ from pathlib import Path
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--device', action='store_true',
-                    default="/dev/cu.usbmodem146101")
+                    default="/dev/cu.usbmodem146401")
 args = parser.parse_args()
 
 CURRENT_DIR = Path(__file__).parent
@@ -23,7 +23,7 @@ with open("LASTRUN", "w") as last_run_file:
 
 found_config = False
 for file in os.listdir(CURRENT_DIR):
-    if file.split(".")[-1] == "py":
+    if file.split(".")[-1] == "py" or file.split(".")[-1] == "json":
         if file == "configuration.py":
             found_config = True
 

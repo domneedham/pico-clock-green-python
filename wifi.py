@@ -1,6 +1,5 @@
-import network
 import time
-from configuration import wlan_id, wlan_password
+from configuration import Configuration
 from util import singleton
 
 
@@ -8,8 +7,11 @@ from util import singleton
 class WLAN:
     def __init__(self, scheduler):
         self.scheduler = scheduler
+        self.configuration = Configuration().wifi_config
         self.wlan = None
-        self.connect_to_wifi()
+        if self.configuration.enabled:
+            import network
+            self.connect_to_wifi()
 
     def connect_to_wifi(self):
         print("Connecting to WiFi")
@@ -17,7 +19,8 @@ class WLAN:
 
         self.wlan.active(True)
         self.wlan.config(pm=0xa11140)  # Disable powersave mode
-        self.wlan.connect(wlan_id, wlan_password)
+        self.wlan.connect(self.configuration.ssid,
+                          self.configuration.passphrase)
 
         # Wait for connect or fail
         max_wait = 10

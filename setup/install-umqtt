@@ -2,7 +2,7 @@
 import time
 import network
 import upip
-from configuration import wlan_id, wlan_password
+from configuration_old import wlan_id, wlan_password
 
 print("Connecting to wifi")
 wlan = network.WLAN(network.STA_IF)
