@@ -53,10 +53,6 @@ class Clock(App):
             self.showing_temperature = True
             temp = self.rtc.get_temperature()
             self.display.show_temperature(temp)
-        elif t[5] == 23:
-            self.display.show_text_for_period("HE")
-        elif t[5] == 25:
-            self.display.animate_text("H1")
 
     def show_time(self):
         hour = self.hour
