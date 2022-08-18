@@ -1,4 +1,4 @@
-from machine import Pin, ADC
+from machine import Pin, ADC, Timer
 
 from util import partial, singleton
 from utime import sleep, sleep_ms, sleep_us
@@ -32,7 +32,7 @@ class Display:
         self.animating = False
         self.display_text_width = 32
         self.disp_offset = 2
-        self.wait_for_animation_queue = []
+        self.display_queue = []
         self.initialise_fonts()
         self.initialise_icons()
         self.initialise_days()
@@ -63,22 +63,23 @@ class Display:
         sleep_us(self.backlight_sleep[self.current_backlight])
         self.oe.value(1)
 
-    def animate_text(self, text: str, delay=1000):
+    def animate_text(self, text: str, delay=1000, clear=True):
         if self.animating:
-            self.wait_for_animation_queue.append(
-                self.WaitForAnimation(self.animate_text, text, delay))
+            self.display_queue.append(
+                self.WaitForAnimation(self.animate_text, text, delay, clear=clear))
             return
 
         # add blank whitespace for text to show correctly
         text = text + " "
-        self.clear_text()
+        if clear:
+            self.clear_text()
         self.show_text(text)
         self.animate(delay)
 
     def animate(self, delay=1000):
         self.runs = 0
         self.animating = True
-        self.scheduler.schedule("animation", 250, self.scroll_text_left, delay)
+        self.scheduler.schedule("animation", 150, self.scroll_text_left, delay)
 
     def scroll_text_left(self, t):
         for row in range(8):
@@ -88,16 +89,17 @@ class Display:
                     self.leds[row][col-1] = led_row[col]
         self.runs += 1
 
-        if self.runs == self.display_text_width - self.disp_offset:  # account for whitespace
+        if self.runs == self.display_text_width - 5:  # account for whitespace
             self.animating = False
             self.scheduler.remove("animation")
-            if self.wait_for_animation_queue.count == 0:
-                self.show_time()
-            else:
-                for item in self.wait_for_animation_queue:
-                    item.callback()
-                self.wait_for_animation_queue = []
-                self.show_time()
+            self.process_callback_queue()
+
+    def process_callback_queue(self, *args):
+        if len(self.display_queue) == 0:
+            self.show_time()
+        else:
+            self.display_queue[0].callback()
+            del self.display_queue[0]
 
     def clear(self, x=0, y=0, w=24, h=7):
         for yy in range(y, y + h + 1):
@@ -117,13 +119,15 @@ class Display:
                 self.leds[row][pos + col] = (byte >> col) % 2
         self.leds_changed = True
 
-    def show_text(self, text, pos=0):
+    def show_text(self, text, pos=0, clear=True):
         if self.animating:
-            self.wait_for_animation_queue.append(
+            self.display_queue.append(
                 self.WaitForAnimation(self.show_text, text, pos))
             return
 
-        self.clear_text()
+        if clear:
+            self.clear_text()
+
         i = 0
         while i < len(text):
             if text[i:i + 2] in self.ziku:
@@ -167,7 +171,8 @@ class Display:
             temp = helpers.convert_celsius_to_temperature(temp)
             symbol = "°F"
         temp = str(temp)
-        self.animate_text(temp + symbol, 2500)
+        self.animate_text(self.time + " " + temp +
+                          symbol, delay=0, clear=False)
 
     def show_icon(self, name):
         icon = self.Icons[name]
