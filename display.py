@@ -119,6 +119,17 @@ class Display:
                 self.leds[row][pos + col] = (byte >> col) % 2
         self.leds_changed = True
 
+    def show_text_for_period(self, text, pos=0, clear=True, display_period=5000):
+        if self.animating:
+            self.display_queue.append(
+                self.WaitForAnimation(self.show_text_for_period, text, pos, display_period))
+            return
+
+        self.show_text(text, pos, clear)
+        timer = Timer(-1)
+        timer.init(period=display_period, mode=Timer.ONE_SHOT,
+                   callback=self.process_callback_queue)
+
     def show_text(self, text, pos=0, clear=True):
         if self.animating:
             self.display_queue.append(
