@@ -22,7 +22,7 @@ class Clock(App):
 
     def enable(self):
         self.enabled = True
-        self.update_time()
+        self.update_time(force_show_time=True)
         self.buttons.add_callback(3, self.backlight_callback, max=500)
 
     def disable(self):
@@ -39,10 +39,10 @@ class Clock(App):
                     # makes : not display
                     self.display.show_char(" :", pos=10)
 
-    def update_time(self):
+    def update_time(self, force_show_time=False):
         t = self.rtc.get_time()
         self.second = t[5]
-        if self.hour != t[3] or self.minute != t[4]:
+        if self.hour != t[3] or self.minute != t[4] or force_show_time:
             self.showing_temperature = False
             self.hour = t[3]
             self.minute = t[4]

@@ -107,6 +107,9 @@ class Display:
                 self.leds[yy][xx] = 0
 
     def clear_text(self):
+        self.animating = False
+        self.display_queue = []
+        self.scheduler.remove("animation")
         self.display_text_width = 0
         self.clear(x=2, y=1, w=24, h=6)
 

@@ -15,6 +15,7 @@ class App:
 
 class Apps:
     def __init__(self, scheduler):
+        self.scheduler = scheduler
         self.display = Display(scheduler)
         self.buttons = Buttons(scheduler)
         self.apps = []
@@ -41,7 +42,7 @@ class Apps:
         self.apps[self.current_app].disable()
         self.buttons.clear_callbacks(2)
         self.buttons.clear_callbacks(3)
-        self.display.clear()
+        self.display.clear_text()
         self.current_app = (self.current_app + 1) % len(self.apps)
         print("SWITCHING TO", self.apps[self.current_app].name)
         self.apps[self.current_app].enable()

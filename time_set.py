@@ -95,7 +95,7 @@ class TimeSet(App):
 
     def update_display(self):
         self.time = self.rtc.get_time()
-        self.display.clear()
+        self.display.clear_text()
         if self.state.panel == "time":
             t = self.rtc.get_time()
             now = "%02d:%02d" % (t[3], t[4])
@@ -141,12 +141,12 @@ class TimeSet(App):
         self.flash_count = 0
         self.update_display()
 
-    def stop_callback(self, t):
-        self.scheduler.disable_app(self.name)
-
     def top_button(self, t):
-        self.flash_count = 0
-        self.state_index = (self.state_index + 1) % len(self.states)
-        self.state = self.states[self.state_index]
-        self.display.clear()
-        self.update_display()
+        if self.state_index == len(self.states) - 1:
+            self.disable()
+        else:
+            self.flash_count = 0
+            self.state_index = (self.state_index + 1) % len(self.states)
+            self.state = self.states[self.state_index]
+            self.display.clear_text()
+            self.update_display()
