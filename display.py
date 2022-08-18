@@ -1,13 +1,17 @@
 from machine import Pin, ADC
 
-from util import singleton
-from utime import sleep_us
+from util import partial, singleton
+from utime import sleep, sleep_ms, sleep_us
 from configuration import Configuration
 import helpers
 
 
 @singleton
 class Display:
+    class WaitForAnimation:
+        def __init__(self, callback, *args, **kwargs) -> None:
+            self.callback = partial(callback, *args, **kwargs)
+
     def __init__(self, scheduler):
         self.a0 = Pin(16, Pin.OUT)
         self.a1 = Pin(18, Pin.OUT)
@@ -25,7 +29,10 @@ class Display:
         self.count = 0
         self.leds = [[0] * 32 for i in range(0, 8)]
         self.leds_changed = False
+        self.animating = False
+        self.display_text_width = 32
         self.disp_offset = 2
+        self.wait_for_animation_queue = []
         self.initialise_fonts()
         self.initialise_icons()
         self.initialise_days()
@@ -41,7 +48,6 @@ class Display:
         self.count += 1
         self.row = (self.row + 1) % 8
         led_row = self.leds[self.row]
-
         for col in range(32):
             self.clk.value(0)
             self.sdi.value(led_row[col])
@@ -57,25 +63,41 @@ class Display:
         sleep_us(self.backlight_sleep[self.current_backlight])
         self.oe.value(1)
 
-    def show_led(self):
+    def animate_text(self, text: str, delay=1000):
+        if self.animating:
+            self.wait_for_animation_queue.append(
+                self.WaitForAnimation(self.animate_text, text, delay))
+            return
+
+        # add blank whitespace for text to show correctly
+        text = text + " "
+        self.clear_text()
+        self.show_text(text)
+        self.animate(delay)
+
+    def animate(self, delay=1000):
+        self.runs = 0
+        self.animating = True
+        self.scheduler.schedule("animation", 250, self.scroll_text_left, delay)
+
+    def scroll_text_left(self, t):
         for row in range(8):
-            # self.row = (self.row + 1) % 8
             led_row = self.leds[row]
+            for col in range(self.display_text_width):
+                if row > 0 and col > 2:
+                    self.leds[row][col-1] = led_row[col]
+        self.runs += 1
 
-            for col in range(32):
-                # self.clk.value(0)
-                self.sdi.value(led_row[col])
-                # self.clk.value(1)
-            self.le.value(1)
-            # self.le.value(0)
-            # self.leds_changed = False
-
-            self.a0.value(1 if row & 0x01 else 0)
-            self.a1.value(1 if row & 0x02 else 0)
-            self.a2.value(1 if row & 0x04 else 0)
-            # self.oe.value(0)
-            # sleep_us(self.backlight_sleep[self.current_backlight])
-            self.oe.value(1)
+        if self.runs == self.display_text_width - self.disp_offset:  # account for whitespace
+            self.animating = False
+            self.scheduler.remove("animation")
+            if self.wait_for_animation_queue.count == 0:
+                self.show_time()
+            else:
+                for item in self.wait_for_animation_queue:
+                    item.callback()
+                self.wait_for_animation_queue = []
+                self.show_time()
 
     def clear(self, x=0, y=0, w=24, h=7):
         for yy in range(y, y + h + 1):
@@ -83,6 +105,7 @@ class Display:
                 self.leds[yy][xx] = 0
 
     def clear_text(self):
+        self.display_text_width = 0
         self.clear(x=2, y=1, w=24, h=6)
 
     def show_char(self, character, pos):
@@ -93,9 +116,13 @@ class Display:
             for col in range(0, char.width):
                 self.leds[row][pos + col] = (byte >> col) % 2
         self.leds_changed = True
-        # self.show_led()
 
     def show_text(self, text, pos=0):
+        if self.animating:
+            self.wait_for_animation_queue.append(
+                self.WaitForAnimation(self.show_text, text, pos))
+            return
+
         self.clear_text()
         i = 0
         while i < len(text):
@@ -105,25 +132,75 @@ class Display:
             else:
                 c = text[i]
                 i += 1
-            char = self.ziku[c]
+            width = self.ziku[c].width
+            self.display_text_width += width
+        # account for whitespace between text words
+        self.display_text_width += len(text) + 1
+
+        # handle small text by resetting back to 32
+        if self.display_text_width < 32:
+            self.display_text_width = 32
+        self.set_new_led_rows()
+
+        i = 0
+        while i < len(text):
+            if text[i:i + 2] in self.ziku:
+                c = text[i:i + 2]
+                i += 2
+            else:
+                c = text[i]
+                i += 1
             self.show_char(c, pos)
             width = self.ziku[c].width
             pos += width + 1
-        # self.show_led()
+
+    def show_time(self, time=None):
+        if time != None:
+            self.time = time
+        self.show_text(self.time)
+
+    def show_temperature(self, temp):
+        symbol = ""
+        if self.config.temp == "c":
+            symbol = "°C"
+        else:
+            temp = helpers.convert_celsius_to_temperature(temp)
+            symbol = "°F"
+        temp = str(temp)
+        self.animate_text(temp + symbol, 2500)
 
     def show_icon(self, name):
         icon = self.Icons[name]
         for w in range(icon.width):
             self.leds[icon.y][icon.x + w] = 1
         self.leds_changed = True
-        # self.show_led()
 
     def hide_icon(self, name):
         icon = self.Icons[name]
         for w in range(icon.width):
             self.leds[icon.y][icon.x + w] = 0
         self.leds_changed = True
-        # self.show_led()
+
+    def set_new_led_rows(self):
+        # copy days of week led row
+        day_of_week_row = self.leds[0]
+        icon_column_one = []
+        icon_column_two = []
+        # copy column 1 and two (icons)
+        for row in range(1, 9):
+            icon_column_one.append(self.leds[row - 1][0])
+            icon_column_two.append(self.leds[row - 1][1])
+
+        # reset led array to use new display width (allows for text bigger than screen)
+        new_leds = [[0] * self.display_text_width for i in range(0, 8)]
+
+        # put back previously captured values as they were reset in led reset
+        new_leds[0] = day_of_week_row
+        for row in range(1, 9):
+            new_leds[row - 1][0] = icon_column_one[row - 1]
+            new_leds[row - 1][1] = icon_column_two[row - 1]
+
+        self.leds = new_leds
 
     def sidelight_on(self):
         self.leds[0][2] = 1
@@ -251,16 +328,6 @@ class Display:
             else:
                 self.hide_icon(self.days_of_week[key])
 
-    def show_temperature(self, temp):
-        symbol = ""
-        if self.config.temp == "c":
-            symbol = "°C"
-        else:
-            temp = helpers.convert_celsius_to_temperature(temp)
-            symbol = "°F"
-        temp = str(round(temp))
-        self.show_text(temp + symbol)
-
     # Derived from c code created by yufu on 2021/1/23.
     # Modulus method: negative code, reverse, line by line, 4X7 font
     def initialise_fonts(self):
@@ -316,41 +383,4 @@ class Display:
             "V": self.Character(width=5, rows=[0x11, 0x11, 0x11, 0x11, 0x11, 0x0A, 0x04]),
             # 5×7
             "W": self.Character(width=5, rows=[0x11, 0x11, 0x11, 0x15, 0x15, 0x1B, 0x11]),
-        }
-        self.digital_tube = {
-            "0": [0x0F, 0x09, 0x09, 0x09, 0x09, 0x09, 0x0F],
-            "1": [0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08],
-            "2": [0x0F, 0x08, 0x08, 0x0F, 0x01, 0x01, 0x0F],
-            "3": [0x0F, 0x08, 0x08, 0x0F, 0x08, 0x08, 0x0F],
-            "4": [0x09, 0x09, 0x09, 0x0F, 0x08, 0x08, 0x08],
-            "5": [0x0F, 0x01, 0x01, 0x0F, 0x08, 0x08, 0x0F],
-            "6": [0x0F, 0x01, 0x01, 0x0F, 0x09, 0x09, 0x0F],
-            "7": [0x0F, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08],
-            "8": [0x0F, 0x09, 0x09, 0x0F, 0x09, 0x09, 0x0F],
-            "9": [0x0F, 0x09, 0x09, 0x0F, 0x08, 0x08, 0x0F],
-            "A": [0x0F, 0x09, 0x09, 0x0F, 0x09, 0x09, 0x09],
-            "B": [0x01, 0x01, 0x01, 0x0F, 0x09, 0x09, 0x0F],
-            "C": [0x0F, 0x01, 0x01, 0x01, 0x01, 0x01, 0x0F],
-            "D": [0x08, 0x08, 0x08, 0x0F, 0x09, 0x09, 0x0F],
-            "E": [0x0F, 0x01, 0x01, 0x0F, 0x01, 0x01, 0x0F],
-            "F": [0x0F, 0x01, 0x01, 0x0F, 0x01, 0x01, 0x01],
-            "H": [0x09, 0x09, 0x09, 0x0F, 0x09, 0x09, 0x09],
-            "L": [0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x0F],
-            "N": [0x0F, 0x09, 0x09, 0x09, 0x09, 0x09, 0x09],
-            "P": [0x0F, 0x09, 0x09, 0x0F, 0x01, 0x01, 0x01],
-            "U": [0x09, 0x09, 0x09, 0x09, 0x09, 0x09, 0x0F],
-            ":": [0x00, 0x03, 0x03, 0x00, 0x03, 0x03, 0x00],  # 2×7
-            "°C": [0x01, 0x1E, 0x02, 0x02, 0x02, 0x02, 0x1E],  # celsius 5×7
-            "°F": [0x01, 0x1E, 0x02, 0x1E, 0x02, 0x02, 0x02],  # fahrenheit
-            " ": [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
-            "T": [0x1F, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04],  # 5*7
-            ".": [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],  # 2×7
-            "-": [0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00],  # 2×7
-            "M": [0x00, 0x11, 0x1B, 0x15, 0x11, 0x11, 0x11, 0x11],  # 5×7
-            "/": [0x00, 0x04, 0x04, 0x02, 0x02, 0x02, 0x01, 0x01],  # 3×7
-            # celsius 5x7
-            "°C2": [0x00, 0x01, 0x0C, 0x12, 0x02, 0x02, 0x12, 0x0C],
-            "°F2": [0x00, 0x01, 0x1E, 0x02, 0x1E, 0x02, 0x02, 0x02],  # fahrenheit
-            "V": [0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x1F],  # 5×7
-            "W": [0x11, 0x11, 0x11, 0x15, 0x15, 0x1B, 0x11],  # 5×7
         }

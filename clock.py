@@ -53,15 +53,12 @@ class Clock(App):
             self.showing_temperature = True
             temp = self.rtc.get_temperature()
             self.display.show_temperature(temp)
-        elif t[5] == 30:
-            self.showing_temperature = False
-            self.show_time()
 
     def show_time(self):
         hour = self.hour
         if self.config.clock_type == "12":
             hour = helpers.convert_twenty_four_to_twelve_hour(hour)
-        self.display.show_text("%02d:%02d" % (hour, self.minute))
+        self.display.show_time("%02d:%02d" % (hour, self.minute))
 
     def show_time_icon(self):
         if self.hour >= 12:

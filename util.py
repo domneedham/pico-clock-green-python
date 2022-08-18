@@ -6,3 +6,10 @@ def singleton(class_):
             instances[class_] = class_(*args, **kwargs)
         return instances[class_]
     return getinstance
+
+
+def partial(func, *args, **kwargs):
+    def inner(*iargs, **ikwargs):
+        return func(*args, *iargs, **kwargs, **ikwargs)
+
+    return inner

@@ -1,3 +1,4 @@
+from utime import sleep
 from pico_temperature import PicoTemperature
 from scheduler import Scheduler
 from clock import Clock
@@ -37,3 +38,7 @@ for App in APP_CLASSES:
 
 print("STARTING...")
 scheduler.start()
+
+while(True):
+    sleep(5)
+    print("")
