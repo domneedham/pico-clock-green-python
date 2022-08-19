@@ -95,7 +95,7 @@ class TimeSet(App):
 
     def update_display(self):
         self.time = self.rtc.get_time()
-        self.display.clear_text()
+        self.display.reset()
         if self.state.panel == "time":
             t = self.rtc.get_time()
             now = "%02d:%02d" % (t[3], t[4])
@@ -148,5 +148,5 @@ class TimeSet(App):
             self.flash_count = 0
             self.state_index = (self.state_index + 1) % len(self.states)
             self.state = self.states[self.state_index]
-            self.display.clear_text()
+            self.display.reset()
             self.update_display()

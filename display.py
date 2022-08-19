@@ -30,9 +30,11 @@ class Display:
         self.leds = [[0] * 32 for i in range(0, 8)]
         self.leds_changed = False
         self.animating = False
+        self.showing_time = False
         self.display_text_width = 32
         self.disp_offset = 2
         self.display_queue = []
+        self.display_queue_timer = Timer(-1)
         self.initialise_fonts()
         self.initialise_icons()
         self.initialise_days()
@@ -96,22 +98,27 @@ class Display:
 
     def process_callback_queue(self, *args):
         if len(self.display_queue) == 0:
-            self.show_time()
+            if not self.showing_time:
+                self.show_time()
         else:
             self.display_queue[0].callback()
-            del self.display_queue[0]
+            self.display_queue.pop(0)
 
     def clear(self, x=0, y=0, w=24, h=7):
+        self.display_text_width = 32
         for yy in range(y, y + h + 1):
             for xx in range(x, x + w + 1):
                 self.leds[yy][xx] = 0
 
     def clear_text(self):
         self.animating = False
-        self.display_queue = []
         self.scheduler.remove("animation")
         self.display_text_width = 0
         self.clear(x=2, y=1, w=24, h=6)
+
+    def reset(self):
+        self.clear_text()
+        self.display_queue = []
 
     def show_char(self, character, pos):
         pos += self.disp_offset  # Plus the offset of the status indicator
@@ -129,9 +136,8 @@ class Display:
             return
 
         self.show_text(text, pos, clear)
-        timer = Timer(-1)
-        timer.init(period=display_period, mode=Timer.ONE_SHOT,
-                   callback=self.process_callback_queue)
+        self.display_queue_timer.init(period=display_period, mode=Timer.ONE_SHOT,
+                                      callback=self.process_callback_queue)
 
     def show_text(self, text, pos=0, clear=True):
         if self.animating:
@@ -173,11 +179,13 @@ class Display:
             pos += width + 1
 
     def show_time(self, time=None):
+        self.showing_time = True
         if time != None:
             self.time = time
-        self.show_text(self.time)
+        self.show_text_for_period(self.time)
 
     def show_temperature(self, temp):
+        self.showing_time = False
         symbol = ""
         if self.config.temp == "c":
             symbol = "°C"
@@ -187,6 +195,10 @@ class Display:
         temp = str(temp)
         self.animate_text(self.time + " " + temp +
                           symbol, delay=0, clear=False)
+
+    def show_message(self, text: str):
+        self.showing_time = False
+        self.show_text_for_period(text, display_period=8000)
 
     def show_icon(self, name):
         icon = self.Icons[name]

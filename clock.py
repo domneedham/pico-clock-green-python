@@ -17,7 +17,6 @@ class Clock(App):
         self.hour = 0
         self.minute = 0
         self.second = 0
-        self.showing_temperature = False
         scheduler.schedule("clock-second", 1000, self.secs_callback)
 
     def enable(self):
@@ -31,7 +30,7 @@ class Clock(App):
     def secs_callback(self, t):
         if self.enabled:
             self.update_time()
-            if self.config.blink_time_colon and not self.showing_temperature:
+            if self.should_blink():
                 if self.second % 2 == 0:
                     # makes : display
                     self.display.show_char(":", pos=10)
@@ -39,18 +38,19 @@ class Clock(App):
                     # makes : not display
                     self.display.show_char(" :", pos=10)
 
+    def should_blink(self):
+        return self.config.blink_time_colon and not self.display.animating and self.display.showing_time
+
     def update_time(self, force_show_time=False):
         t = self.rtc.get_time()
         self.second = t[5]
         if self.hour != t[3] or self.minute != t[4] or force_show_time:
-            self.showing_temperature = False
             self.hour = t[3]
             self.minute = t[4]
             self.show_time_icon()
             self.show_time()
             self.display.show_day(t[6])
         elif t[5] == 20:
-            self.showing_temperature = True
             temp = self.rtc.get_temperature()
             self.display.show_temperature(temp)
 

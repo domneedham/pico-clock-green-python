@@ -1,6 +1,6 @@
 {
   "runConfig": {
-    "blinkTimeColon": false,
+    "blinkTimeColon": true,
     "temp": "c",
     "clockType": "24",
     "autolight": false
