@@ -97,6 +97,7 @@ class Display:
             self.process_callback_queue()
 
     def process_callback_queue(self, *args):
+        print(len(self.display_queue))
         if len(self.display_queue) == 0:
             if not self.showing_time:
                 self.show_time()
@@ -105,7 +106,7 @@ class Display:
             self.display_queue.pop(0)
 
     def clear(self, x=0, y=0, w=24, h=7):
-        self.display_text_width = 32
+        self.display_text_width = 0
         for yy in range(y, y + h + 1):
             for xx in range(x, x + w + 1):
                 self.leds[yy][xx] = 0
@@ -113,7 +114,6 @@ class Display:
     def clear_text(self):
         self.animating = False
         self.scheduler.remove("animation")
-        self.display_text_width = 0
         self.clear(x=2, y=1, w=24, h=6)
 
     def reset(self):
