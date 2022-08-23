@@ -26,7 +26,8 @@ class Clock(App):
         self.buttons.add_callback(
             2, self.switch_temperature_callback, min=500, max=5000)
         self.buttons.add_callback(3, self.backlight_callback, max=500)
-        # add button callback for long press to switch temp display
+        self.buttons.add_callback(
+            3, self.switch_blink_callback, min=500, max=5000)
 
     def disable(self):
         self.enabled = False
@@ -84,3 +85,6 @@ class Clock(App):
 
     def backlight_callback(self, t):
         self.display.switch_backlight()
+
+    def switch_blink_callback(self, t):
+        self.config.switch_blink_time_colon_value()

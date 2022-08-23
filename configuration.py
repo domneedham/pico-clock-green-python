@@ -51,8 +51,12 @@ class Configuration:
         write_json_file("config.json", self.config)
         self.update_config_variables()
 
-    def update_blink_time_colon_value(self, value):
-        self.config["runConfig"]["blinkTimeColon"] = value
+    def switch_blink_time_colon_value(self):
+        if self.config["runConfig"]["blinkTimeColon"]:
+            self.config["runConfig"]["blinkTimeColon"] = False
+        else:
+            self.config["runConfig"]["blinkTimeColon"] = True
+
         self.write_config_file()
 
     def switch_temp_value(self):
