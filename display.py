@@ -44,7 +44,7 @@ class Display:
 
         self.initialise_backlight()
         self.show_temperature_icon()
-        self.scheduler.schedule("enable-leds", 1, self.enable_leds)
+        self.scheduler.schedule_display("enable-leds", 1, self.enable_leds)
 
     def enable_leds(self, t):
         self.count += 1
@@ -81,7 +81,8 @@ class Display:
     def animate(self, delay=1000):
         self.runs = 0
         self.animating = True
-        self.scheduler.schedule("animation", 200, self.scroll_text_left, delay)
+        self.scheduler.schedule_display(
+            "animation", 200, self.scroll_text_left, delay)
 
     def scroll_text_left(self, t):
         for row in range(8):
@@ -93,7 +94,7 @@ class Display:
 
         if self.runs == self.display_text_width - 5:  # account for whitespace
             self.animating = False
-            self.scheduler.remove("animation")
+            self.scheduler.remove_display_schedule("animation")
             self.process_callback_queue()
 
     def process_callback_queue(self, *args):
@@ -113,7 +114,7 @@ class Display:
 
     def clear_text(self):
         self.animating = False
-        self.scheduler.remove("animation")
+        self.scheduler.remove_display_schedule("animation")
         self.clear(x=2, y=1, w=24, h=6)
 
     def reset(self):
@@ -246,13 +247,14 @@ class Display:
             self.auto_backlight = False
             self.hide_icon("AutoLight")
             self.current_backlight = 0
-            self.scheduler.remove("update_auto_backlight_value")
+            self.scheduler.remove_display_schedule(
+                "update_auto_backlight_value")
             self.config.update_autolight_value(False)
         elif self.current_backlight == 3:
             self.show_icon("AutoLight")
             self.auto_backlight = True
             self.update_auto_backlight_value(None)
-            self.scheduler.schedule(
+            self.scheduler.schedule_display(
                 "update_auto_backlight_value", 1000, self.update_auto_backlight_value)
             self.config.update_autolight_value(True)
         else:
@@ -268,7 +270,7 @@ class Display:
 
         if self.auto_backlight:
             self.show_icon("AutoLight")
-            self.scheduler.schedule(
+            self.scheduler.schedule_display(
                 "update_auto_backlight_value", 1000, self.update_auto_backlight_value)
 
     def update_auto_backlight_value(self, t):
@@ -285,8 +287,10 @@ class Display:
     def show_temperature_icon(self):
         if self.config.temp == "c":
             self.show_icon("°C")
+            self.hide_icon("°F")
         else:
             self.show_icon("°F")
+            self.hide_icon("°C")
 
     def print(self):
         for row in range(0, 8):

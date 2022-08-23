@@ -22,7 +22,11 @@ class Clock(App):
     def enable(self):
         self.enabled = True
         self.update_time(force_show_time=True)
+        self.buttons.add_callback(2, self.temp_callback, max=500)
+        self.buttons.add_callback(
+            2, self.switch_temperature_callback, min=500, max=5000)
         self.buttons.add_callback(3, self.backlight_callback, max=500)
+        # add button callback for long press to switch temp display
 
     def disable(self):
         self.enabled = False
@@ -51,8 +55,7 @@ class Clock(App):
             self.show_time()
             self.display.show_day(t[6])
         elif t[5] == 20:
-            temp = self.rtc.get_temperature()
-            self.display.show_temperature(temp)
+            self.show_temperature()
 
     def show_time(self):
         hour = self.hour
@@ -67,6 +70,17 @@ class Clock(App):
         else:
             self.display.show_icon("AM")
             self.display.hide_icon("PM")
+
+    def show_temperature(self):
+        temp = self.rtc.get_temperature()
+        self.display.show_temperature(temp)
+
+    def temp_callback(self, t):
+        self.show_temperature()
+
+    def switch_temperature_callback(self, t):
+        self.config.switch_temp_value()
+        self.display.show_temperature_icon()
 
     def backlight_callback(self, t):
         self.display.switch_backlight()

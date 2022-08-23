@@ -55,8 +55,12 @@ class Configuration:
         self.config["runConfig"]["blinkTimeColon"] = value
         self.write_config_file()
 
-    def update_temp_value(self, value):
-        self.config["runConfig"]["temp"] = value
+    def switch_temp_value(self):
+        if self.config["runConfig"]["temp"] == "c":
+            self.config["runConfig"]["temp"] = "f"
+        else:
+            self.config["runConfig"]["temp"] = "c"
+
         self.write_config_file()
 
     def update_clock_type_value(self, value):
