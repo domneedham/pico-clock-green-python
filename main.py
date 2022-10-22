@@ -13,7 +13,7 @@ import machine
 import uasyncio
 
 
-machine.freq(250_000_000)
+machine.freq(250_000_000)  # type: ignore
 
 APP_CLASSES = [
     Clock,

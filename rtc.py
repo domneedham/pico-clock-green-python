@@ -6,7 +6,7 @@ from util import singleton
 @singleton
 class RTC:
     def __init__(self):
-        rtc_i2c = SoftI2C(scl=Pin(7), sda=Pin(6), freq=100000)
+        rtc_i2c = SoftI2C(scl=Pin(7), sda=Pin(6), freq=100000)  # type: ignore
         self.ds = DS3231(rtc_i2c)
         pass
 

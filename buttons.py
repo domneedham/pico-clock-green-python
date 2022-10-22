@@ -27,7 +27,7 @@ class Buttons:
             self.number = number
             self.state = STATE_UNPRESSED
             self.callbacks = []
-            self.pressed_time = None
+            self.pressed: int
 
         def add_callback(self, callback, min=0, max=-1):
             callback_obj = self.Callback(callback, min, max)
@@ -37,7 +37,7 @@ class Buttons:
         def remove_callback(self, callback, min=0, max=-1):
             for callback in self.callbacks:
                 if callback.callback == callback and callback.min == min and callback.max == max:
-                    self.callback.remove(callback)
+                    self.callbacks.remove(callback)
                     break
 
         def clear_callbacks(self):
@@ -78,4 +78,4 @@ class Buttons:
                                 callback.max == -1 or press_duration <= callback.max):
                             callback.callback()
                             break
-                    button.pressed = None
+                    button.pressed = int()
