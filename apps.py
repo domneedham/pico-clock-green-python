@@ -4,9 +4,8 @@ from speaker import Speaker
 
 
 class App:
-    def __init__(self, name, label):
+    def __init__(self, name):
         self.name = name
-        self.label = label
         self.active = False
         self.grab_top_button = False
 

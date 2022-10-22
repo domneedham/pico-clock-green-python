@@ -1,5 +1,6 @@
 from machine import Pin
 import time
+from constants import SCHEDULER_BUTTON_PRESS
 
 from util import singleton
 
@@ -47,7 +48,7 @@ class Buttons:
         self.buttons = [
             self.Button(number) for number in (1, 2, 3)
         ]
-        scheduler.schedule("button-press", 1, self.millis_callback)
+        scheduler.schedule(SCHEDULER_BUTTON_PRESS, 1, self.millis_callback)
 
     def add_callback(self, number, callback, min=0, max=-1):
         self.buttons[number - 1].add_callback(callback, min, max)

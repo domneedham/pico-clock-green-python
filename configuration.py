@@ -1,3 +1,4 @@
+from constants import CONFIGURATION_FILE, CONFIGURATION_RUN_AUTOLIGHT, CONFIGURATION_RUN_BLINK_TIME_COLON, CONFIGURATION_RUN_CLOCK_TYPE, CONFIGURATION_MQTT_BROKER, CONFIGURATION_MQTT_CONFIG, CONFIGURATION_MQTT_ENABLED, CONFIGURATION_MQTT_PREFIX, CONFIGURATION_RUN_CONFIG, CONFIGURATION_RUN_TEMP, CONFIGURATION_WIFI_CONFIG, CONFIGURATION_WIFI_ENABLED, CONFIGURATION_WIFI_PASSPHRASE, CONFIGURATION_WIFI_SSID
 from util import singleton
 from helpers import read_json_file, write_json_file
 
@@ -26,51 +27,51 @@ class Configuration:
         self.read_config_file()
 
     def read_config_file(self):
-        self.config = read_json_file("config.json")
+        self.config = read_json_file(CONFIGURATION_FILE)
         self.update_config_variables()
 
     def update_config_variables(self):
-        self.blink_time_colon = self.config["runConfig"]["blinkTimeColon"]
-        self.temp = self.config["runConfig"]["temp"]
-        self.clock_type = self.config["runConfig"]["clockType"]
-        self.autolight = self.config["runConfig"]["autolight"]
+        self.blink_time_colon = self.config[CONFIGURATION_RUN_CONFIG][CONFIGURATION_RUN_BLINK_TIME_COLON]
+        self.temp = self.config[CONFIGURATION_RUN_CONFIG][CONFIGURATION_RUN_TEMP]
+        self.clock_type = self.config[CONFIGURATION_RUN_CONFIG][CONFIGURATION_RUN_CLOCK_TYPE]
+        self.autolight = self.config[CONFIGURATION_RUN_CONFIG][CONFIGURATION_RUN_AUTOLIGHT]
 
         self.wifi_config = self.WifiConfiguration(
-            enabled=self.config["wifiConfig"]["enabled"],
-            ssid=self.config["wifiConfig"]["ssid"],
-            passphrase=self.config["wifiConfig"]["passphrase"]
+            enabled=self.config[CONFIGURATION_WIFI_CONFIG][CONFIGURATION_WIFI_ENABLED],
+            ssid=self.config[CONFIGURATION_WIFI_CONFIG][CONFIGURATION_WIFI_SSID],
+            passphrase=self.config[CONFIGURATION_WIFI_CONFIG][CONFIGURATION_WIFI_PASSPHRASE]
         )
 
         self.mqtt_config = self.MQTTConfiguration(
-            enabled=self.config["mqttConfig"]["enabled"],
-            broker=self.config["mqttConfig"]["broker"],
-            prefix=self.config["mqttConfig"]["prefix"]
+            enabled=self.config[CONFIGURATION_MQTT_CONFIG][CONFIGURATION_MQTT_ENABLED],
+            broker=self.config[CONFIGURATION_MQTT_CONFIG][CONFIGURATION_MQTT_BROKER],
+            prefix=self.config[CONFIGURATION_MQTT_CONFIG][CONFIGURATION_MQTT_PREFIX]
         )
 
     def write_config_file(self):
-        write_json_file("config.json", self.config)
+        write_json_file(CONFIGURATION_FILE, self.config)
         self.update_config_variables()
 
     def switch_blink_time_colon_value(self):
-        if self.config["runConfig"]["blinkTimeColon"]:
-            self.config["runConfig"]["blinkTimeColon"] = False
+        if self.config[CONFIGURATION_RUN_CONFIG][CONFIGURATION_RUN_BLINK_TIME_COLON]:
+            self.config[CONFIGURATION_RUN_CONFIG][CONFIGURATION_RUN_BLINK_TIME_COLON] = False
         else:
-            self.config["runConfig"]["blinkTimeColon"] = True
+            self.config[CONFIGURATION_RUN_CONFIG][CONFIGURATION_RUN_BLINK_TIME_COLON] = True
 
         self.write_config_file()
 
     def switch_temp_value(self):
-        if self.config["runConfig"]["temp"] == "c":
-            self.config["runConfig"]["temp"] = "f"
+        if self.config[CONFIGURATION_RUN_CONFIG][CONFIGURATION_RUN_TEMP] == "c":
+            self.config[CONFIGURATION_RUN_CONFIG][CONFIGURATION_RUN_TEMP] = "f"
         else:
-            self.config["runConfig"]["temp"] = "c"
+            self.config[CONFIGURATION_RUN_CONFIG][CONFIGURATION_RUN_TEMP] = "c"
 
         self.write_config_file()
 
     def update_clock_type_value(self, value):
-        self.config["runConfig"]["clockType"] = value
+        self.config[CONFIGURATION_RUN_CONFIG][CONFIGURATION_RUN_CLOCK_TYPE] = value
         self.write_config_file()
 
     def update_autolight_value(self, value):
-        self.config["runConfig"]["autolight"] = value
+        self.config[CONFIGURATION_RUN_CONFIG][CONFIGURATION_RUN_AUTOLIGHT] = value
         self.write_config_file()

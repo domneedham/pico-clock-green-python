@@ -1,6 +1,7 @@
 import time
 from apps import App
 from buttons import Buttons
+from constants import APP_POMODORO, SCHEDULER_POMODORO_SECOND
 from display import Display
 from speaker import Speaker
 
@@ -8,7 +9,7 @@ from speaker import Speaker
 class Pomodoro(App):
     def __init__(self, scheduler):
         self.scheduler = scheduler
-        App.__init__(self, "Pomodoro", "pomod")
+        App.__init__(self, APP_POMODORO)
         self.display = Display(scheduler)
         self.speaker = Speaker(scheduler)
         self.buttons = Buttons(scheduler)
@@ -16,7 +17,7 @@ class Pomodoro(App):
         self.started = False
         self.start_time = None
         self.time_left = None
-        scheduler.schedule("pomodoro-second", 1000, self.secs_callback)
+        scheduler.schedule(SCHEDULER_POMODORO_SECOND, 1000, self.secs_callback)
         self.pomodoro_duration = 25*60  # 25 mins
 
     def enable(self):
