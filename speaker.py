@@ -1,6 +1,5 @@
-from machine import Pin, Timer
+from machine import Pin
 import time
-from mqtt import MQTT
 
 from util import singleton
 
@@ -12,7 +11,6 @@ class Speaker:
         self.buzz.value(0)
         self.buzz_start = 0
         self.duration = 0
-        self.mqtt = MQTT(scheduler)
         scheduler.schedule("beeps", 1, self.beep_callback)
 
     def beep(self, duration):

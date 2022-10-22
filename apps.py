@@ -1,5 +1,6 @@
 from buttons import Buttons
 from display import Display
+from speaker import Speaker
 
 
 class App:
@@ -18,6 +19,7 @@ class Apps:
         self.scheduler = scheduler
         self.display = Display(scheduler)
         self.buttons = Buttons(scheduler)
+        self.speaker = Speaker(scheduler)
         self.apps = []
         self.current_app = 0
         self.buttons.add_callback(1, self.next, max=500)
@@ -45,6 +47,7 @@ class Apps:
         self.display.clear_text()
         self.current_app = (self.current_app + 1) % len(self.apps)
         print("SWITCHING TO", self.apps[self.current_app].name)
+        self.speaker.beep(200)
         self.apps[self.current_app].enable()
 
     def previous(self, t):
