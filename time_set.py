@@ -1,6 +1,6 @@
 from apps import App
 from buttons import Buttons
-from constants import SCHEDULER_TIME_SET_HALF_SECOND, SCHEDULER_TIME_SET_MINUTE
+from constants import APP_TIME_SET, SCHEDULER_TIME_SET_HALF_SECOND, SCHEDULER_TIME_SET_MINUTE
 from display import Display
 from rtc import RTC
 
@@ -32,7 +32,7 @@ class TimeSet(App):
             self.offset = offset
 
     def __init__(self, scheduler):
-        App.__init__(self, "Time Set", "timeset")
+        App.__init__(self, APP_TIME_SET)
 
         self.display = Display(scheduler)
         self.scheduler = scheduler

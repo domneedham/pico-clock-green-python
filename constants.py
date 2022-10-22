@@ -18,3 +18,9 @@ SCHEDULER_SPEAKER_BEEPS = "speaker-beeps"
 
 SCHEDULER_TIME_SET_HALF_SECOND = "time-set-half-second"
 SCHEDULER_TIME_SET_MINUTE = "time-set-minute"
+
+
+# App names
+APP_CLOCK = "Clock"
+APP_POMODORO = "Pomodoro"
+APP_TIME_SET = "Time Set"

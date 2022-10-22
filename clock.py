@@ -1,5 +1,5 @@
 from apps import App
-from constants import SCHEDULER_CLOCK_SECOND
+from constants import APP_CLOCK, SCHEDULER_CLOCK_SECOND
 from display import Display
 from rtc import RTC
 from buttons import Buttons
@@ -9,7 +9,7 @@ import helpers
 
 class Clock(App):
     def __init__(self, scheduler):
-        App.__init__(self, "Clock", "clock")
+        App.__init__(self, APP_CLOCK)
         self.config = Configuration()
         self.display = Display(scheduler)
         self.rtc = RTC()
