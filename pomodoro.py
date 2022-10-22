@@ -7,10 +7,10 @@ from speaker import Speaker
 
 class Pomodoro(App):
     def __init__(self, scheduler):
+        self.scheduler = scheduler
         App.__init__(self, "Pomodoro", "pomod")
         self.display = Display(scheduler)
         self.speaker = Speaker(scheduler)
-        self.scheduler = scheduler
         self.buttons = Buttons(scheduler)
         self.enabled = False
         self.started = False
@@ -45,7 +45,7 @@ class Pomodoro(App):
         self.started = False
         self.time_left = self._time_left()
 
-    def secs_callback(self):
+    def secs_callback(self, t):
         if self.enabled and self.started:
             now = int(self._time_left())
             t = "%02d:%02d" % (now // 60, now % 60)
@@ -56,13 +56,13 @@ class Pomodoro(App):
                 self.start_time = None
                 self.time_left = None
 
-    def start_callback(self):
+    def start_callback(self, t):
         if self.enabled and self.started:
             self.stop()
         else:
             print("START POMODORO")
             self.start()
 
-    def clear_callback(self):
+    def clear_callback(self, t):
         self.stop()
         self.enable()

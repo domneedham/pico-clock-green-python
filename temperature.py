@@ -9,7 +9,7 @@ from mqtt import MQTT
 class Temperature:
     def __init__(self, mqtt: MQTT):
         self.mqtt = mqtt
-        rtc_i2c = SoftI2C(scl=Pin(7), sda=Pin(6), freq=100000)
+        rtc_i2c = SoftI2C(scl=Pin(7), sda=Pin(6), freq=100000)  # type: ignore
         self.ds = DS3231(rtc_i2c)
         mqtt.register_state_callback("temperature", self.get_temperature)
         pass
