@@ -42,7 +42,3 @@ scheduler.start()
 
 loop = uasyncio.get_event_loop()
 loop.run_forever()
-
-while(True):
-    sleep(5)
-    print("")

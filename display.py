@@ -44,7 +44,7 @@ class Display:
 
         self.initialise_backlight()
         self.show_temperature_icon()
-        self.scheduler.schedule_display("enable-leds", 1, self.enable_leds)
+        self.scheduler.schedule_display("enable-leds", 0, self.enable_leds)
 
     def enable_leds(self):
         self.count += 1
@@ -98,7 +98,6 @@ class Display:
             self.process_callback_queue()
 
     def process_callback_queue(self, *args):
-        print(len(self.display_queue))
         if len(self.display_queue) == 0:
             if not self.showing_time:
                 self.show_time()
