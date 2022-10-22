@@ -46,7 +46,7 @@ class Pomodoro(App):
         self.started = False
         self.time_left = self._time_left()
 
-    def secs_callback(self, t):
+    def secs_callback(self):
         if self.enabled and self.started:
             now = int(self._time_left())
             t = "%02d:%02d" % (now // 60, now % 60)
@@ -57,13 +57,13 @@ class Pomodoro(App):
                 self.start_time = None
                 self.time_left = None
 
-    def start_callback(self, t):
+    def start_callback(self):
         if self.enabled and self.started:
             self.stop()
         else:
             print("START POMODORO")
             self.start()
 
-    def clear_callback(self, t):
+    def clear_callback(self):
         self.stop()
         self.enable()
