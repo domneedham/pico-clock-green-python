@@ -1,5 +1,6 @@
 from apps import App
 from buttons import Buttons
+from constants import SCHEDULER_TIME_SET_HALF_SECOND, SCHEDULER_TIME_SET_MINUTE
 from display import Display
 from rtc import RTC
 
@@ -43,9 +44,10 @@ class TimeSet(App):
         self.state_index = -1
         self.flash_count = 0
         self.flash_state = False
-        scheduler.schedule("time-set-half-second", 500,
+        scheduler.schedule(SCHEDULER_TIME_SET_HALF_SECOND, 500,
                            self.half_secs_callback)
-        scheduler.schedule("time-set-minute", 60000, self.mins_callback)
+        scheduler.schedule(SCHEDULER_TIME_SET_MINUTE,
+                           60000, self.mins_callback)
         self.initialise_states()
 
     def initialise_states(self):

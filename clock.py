@@ -1,4 +1,5 @@
 from apps import App
+from constants import SCHEDULER_CLOCK_SECOND
 from display import Display
 from rtc import RTC
 from buttons import Buttons
@@ -17,7 +18,7 @@ class Clock(App):
         self.hour = 0
         self.minute = 0
         self.second = 0
-        scheduler.schedule("clock-second", 1000, self.secs_callback)
+        scheduler.schedule(SCHEDULER_CLOCK_SECOND, 1000, self.secs_callback)
 
     def enable(self):
         self.enabled = True

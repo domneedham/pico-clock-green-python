@@ -1,6 +1,7 @@
 import time
 from apps import App
 from buttons import Buttons
+from constants import SCHEDULER_POMODORO_SECOND
 from display import Display
 from speaker import Speaker
 
@@ -16,7 +17,7 @@ class Pomodoro(App):
         self.started = False
         self.start_time = None
         self.time_left = None
-        scheduler.schedule("pomodoro-second", 1000, self.secs_callback)
+        scheduler.schedule(SCHEDULER_POMODORO_SECOND, 1000, self.secs_callback)
         self.pomodoro_duration = 25*60  # 25 mins
 
     def enable(self):

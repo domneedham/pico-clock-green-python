@@ -1,5 +1,6 @@
 from machine import Pin
 import time
+from constants import SCHEDULER_SPEAKER_BEEPS
 
 from util import singleton
 
@@ -11,7 +12,7 @@ class Speaker:
         self.buzz.value(0)
         self.buzz_start = 0
         self.duration = 0
-        scheduler.schedule("beeps", 1, self.beep_callback)
+        scheduler.schedule(SCHEDULER_SPEAKER_BEEPS, 1, self.beep_callback)
 
     def beep(self, duration):
         self.buzz.value(1)

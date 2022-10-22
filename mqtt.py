@@ -1,6 +1,7 @@
 import time
 import json
 from configuration import Configuration
+from constants import SCHEDULER_MQTT_CHECK, SCHEDULER_MQTT_HEARTBEAT, SCHEDULER_MQTT_STATE
 from scheduler import Scheduler
 from configuration_old import mqtt_server, mqtt_prefix, mqtt_base_topic
 from util import singleton
@@ -29,10 +30,12 @@ class MQTT:
             self.client = MQTTClient(self.configuration.prefix, self.configuration.broker, user=None,
                                      password=None, keepalive=300, ssl=False, ssl_params={})
             self.connect()
-            scheduler.schedule("mqtt-heartbeat", 250,
+            scheduler.schedule(SCHEDULER_MQTT_HEARTBEAT, 250,
                                self.scheduler_heartbeat_callback)
-            scheduler.schedule("mqtt-check", 1, self.scheduler_mqtt_callback)
-            scheduler.schedule("state", 60000, self.scheduler_mqtt_state)
+            scheduler.schedule(SCHEDULER_MQTT_CHECK, 1,
+                               self.scheduler_mqtt_callback)
+            scheduler.schedule(SCHEDULER_MQTT_STATE, 60000,
+                               self.scheduler_mqtt_state)
 
     def connect(self):
         print("Connecting to MQTT")
