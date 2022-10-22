@@ -10,6 +10,7 @@ from wifi import WLAN
 from mqtt import MQTT
 from configuration import Configuration
 import machine
+import uasyncio
 
 
 machine.freq(250_000_000)
@@ -39,6 +40,5 @@ for App in APP_CLASSES:
 print("STARTING...")
 scheduler.start()
 
-while(True):
-    sleep(5)
-    print("")
+loop = uasyncio.get_event_loop()
+loop.run_forever()

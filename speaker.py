@@ -18,13 +18,13 @@ class Speaker:
         self.buzz_start = time.ticks_ms()
         self.duration = duration
 
-    def beep_off(self, t):
+    def beep_off(self):
         self.buzz.value(0)
         self.duration = 0
         self.buzz_start = 0
 
-    def beep_callback(self, t):
+    def beep_callback(self):
         if self.buzz_start != 0:
             tm = time.ticks_ms()
             if time.ticks_diff(tm, self.buzz_start) > self.duration:
-                self.beep_off(t)
+                self.beep_off()

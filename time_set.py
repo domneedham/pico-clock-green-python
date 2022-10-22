@@ -70,7 +70,7 @@ class TimeSet(App):
         self.enabled = False
         self.state = None
 
-    def half_secs_callback(self, t):
+    def half_secs_callback(self):
         if self.enabled:
             self.flash_count = (self.flash_count+1) % 3
             if self.flash_count == 2:
@@ -89,7 +89,7 @@ class TimeSet(App):
                         self.display.show_text(
                             "%04d" % self.time[self.state.index], pos=self.state.position)
 
-    def mins_callback(self, t):
+    def mins_callback(self):
         if self.enabled:
             self.update_display()
 
@@ -111,7 +111,7 @@ class TimeSet(App):
             now = "%02d/%02d" % (t[1], t[2])
             self.display.show_text(now)
 
-    def up_callback(self, t):
+    def up_callback(self):
         self.active = True
         t = list(self.rtc.get_time())
         max = self.state.max
@@ -126,7 +126,7 @@ class TimeSet(App):
         self.flash_count = 0
         self.update_display()
 
-    def down_callback(self, t):
+    def down_callback(self):
         self.active = True
         t = list(self.rtc.get_time())
         max = self.state.max
@@ -141,7 +141,7 @@ class TimeSet(App):
         self.flash_count = 0
         self.update_display()
 
-    def top_button(self, t):
+    def top_button(self):
         if self.state_index == len(self.states) - 1:
             self.disable()
         else:

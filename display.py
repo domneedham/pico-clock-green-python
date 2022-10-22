@@ -44,9 +44,9 @@ class Display:
 
         self.initialise_backlight()
         self.show_temperature_icon()
-        self.scheduler.schedule_display("enable-leds", 1, self.enable_leds)
+        self.scheduler.schedule("enable-leds", 0, self.enable_leds)
 
-    def enable_leds(self, t):
+    def enable_leds(self):
         self.count += 1
         self.row = (self.row + 1) % 8
         led_row = self.leds[self.row]
@@ -81,10 +81,10 @@ class Display:
     def animate(self, delay=1000):
         self.runs = 0
         self.animating = True
-        self.scheduler.schedule_display(
+        self.scheduler.schedule(
             "animation", 200, self.scroll_text_left, delay)
 
-    def scroll_text_left(self, t):
+    def scroll_text_left(self):
         for row in range(8):
             led_row = self.leds[row]
             for col in range(self.display_text_width):
@@ -94,11 +94,10 @@ class Display:
 
         if self.runs == self.display_text_width - 5:  # account for whitespace
             self.animating = False
-            self.scheduler.remove_display_schedule("animation")
+            self.scheduler.remove("animation")
             self.process_callback_queue()
 
     def process_callback_queue(self, *args):
-        print(len(self.display_queue))
         if len(self.display_queue) == 0:
             if not self.showing_time:
                 self.show_time()
@@ -114,7 +113,7 @@ class Display:
 
     def clear_text(self):
         self.animating = False
-        self.scheduler.remove_display_schedule("animation")
+        self.scheduler.remove("animation")
         self.clear(x=2, y=1, w=24, h=6)
 
     def reset(self):
@@ -247,14 +246,14 @@ class Display:
             self.auto_backlight = False
             self.hide_icon("AutoLight")
             self.current_backlight = 0
-            self.scheduler.remove_display_schedule(
+            self.scheduler.remove(
                 "update_auto_backlight_value")
             self.config.update_autolight_value(False)
         elif self.current_backlight == 3:
             self.show_icon("AutoLight")
             self.auto_backlight = True
-            self.update_auto_backlight_value(None)
-            self.scheduler.schedule_display(
+            self.update_auto_backlight_value()
+            self.scheduler.schedule(
                 "update_auto_backlight_value", 1000, self.update_auto_backlight_value)
             self.config.update_autolight_value(True)
         else:
@@ -266,14 +265,14 @@ class Display:
         self.backlight_sleep = [10, 100, 300, 1500]
         self.current_backlight = 3
         self.auto_backlight = self.config.autolight
-        self.update_auto_backlight_value(None)
+        self.update_auto_backlight_value()
 
         if self.auto_backlight:
             self.show_icon("AutoLight")
-            self.scheduler.schedule_display(
+            self.scheduler.schedule(
                 "update_auto_backlight_value", 1000, self.update_auto_backlight_value)
 
-    def update_auto_backlight_value(self, t):
+    def update_auto_backlight_value(self):
         aim = self.ain.read_u16()
         if aim > 65000:  # Low light
             self.current_backlight = 0
