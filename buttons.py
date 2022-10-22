@@ -61,7 +61,7 @@ class Buttons:
     def get_button(self, number):
         return self.buttons[number - 1]
 
-    def millis_callback(self, t):
+    def millis_callback(self):
         for button in self.buttons:
             if len(button.callbacks) > 0:
                 if button.state == STATE_UNPRESSED and button.pin.value() == 0:
@@ -76,6 +76,6 @@ class Buttons:
                     for callback in button.callbacks:
                         if callback.min < press_duration and (
                                 callback.max == -1 or press_duration <= callback.max):
-                            callback.callback(t)
+                            callback.callback()
                             break
                     button.pressed = None

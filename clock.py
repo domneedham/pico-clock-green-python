@@ -32,7 +32,7 @@ class Clock(App):
     def disable(self):
         self.enabled = False
 
-    def secs_callback(self, t):
+    def secs_callback(self):
         if self.enabled:
             self.update_time()
             if self.should_blink():
@@ -76,15 +76,15 @@ class Clock(App):
         temp = self.rtc.get_temperature()
         self.display.show_temperature(temp)
 
-    def temp_callback(self, t):
+    def temp_callback(self):
         self.show_temperature()
 
-    def switch_temperature_callback(self, t):
+    def switch_temperature_callback(self):
         self.config.switch_temp_value()
         self.display.show_temperature_icon()
 
-    def backlight_callback(self, t):
+    def backlight_callback(self):
         self.display.switch_backlight()
 
-    def switch_blink_callback(self, t):
+    def switch_blink_callback(self):
         self.config.switch_blink_time_colon_value()

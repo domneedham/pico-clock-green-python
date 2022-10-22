@@ -10,7 +10,7 @@ class App:
         self.active = False
         self.grab_top_button = False
 
-    def top_button(self, t):
+    def top_button(self):
         print("top_button not implemented for " + self.name)
 
 
@@ -31,14 +31,14 @@ class Apps:
             app.enable()
         self.apps.append(app)
 
-    def next(self, t):
+    def next(self):
         print("NEXT")
         if len(self.apps) == 0:
             return
 
         app = self.apps[self.current_app]
         if app.active and app.grab_top_button:
-            app.top_button(t)
+            app.top_button()
             return
 
         self.apps[self.current_app].disable()
@@ -50,14 +50,14 @@ class Apps:
         self.speaker.beep(200)
         self.apps[self.current_app].enable()
 
-    def previous(self, t):
+    def previous(self):
         print("PREVIOUS")
         if len(self.apps) > 0:
             self.apps[self.current_app].disable()
             self.current_app = (self.current_app - 1) % len(self.apps)
             self.apps[self.current_app].enable()
 
-    def exit(self, t):
+    def exit(self):
         if len(self.apps) > 0:
             self.apps[self.current_app].disable()
             self.current_app = 0
