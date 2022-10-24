@@ -37,8 +37,12 @@ apps = Apps(scheduler)
 for App in APP_CLASSES:
     apps.add(App(scheduler))
 
-print("STARTING...")
-scheduler.start()
 
+async def start():
+    print("STARTING...")
+    scheduler.start()
+    await apps.start()
+
+uasyncio.run(start())
 loop = uasyncio.get_event_loop()
 loop.run_forever()

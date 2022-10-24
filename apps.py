@@ -25,12 +25,15 @@ class Apps:
         self.buttons.add_callback(1, self.previous, min=500)
         self.buttons.add_callback(1, self.exit, min=500)
 
+    async def start(self):
+        await self.apps[0].enable()
+
     def add(self, app):
-        if len(self.apps) == 0:
-            app.enable()
+        # if len(self.apps) == 0:
+        #     await app.enable()
         self.apps.append(app)
 
-    def next(self):
+    async def next(self):
         print("NEXT")
         if len(self.apps) == 0:
             return
@@ -47,16 +50,16 @@ class Apps:
         self.current_app = (self.current_app + 1) % len(self.apps)
         print("SWITCHING TO", self.apps[self.current_app].name)
         self.speaker.beep(200)
-        self.apps[self.current_app].enable()
+        await self.apps[self.current_app].enable()
 
-    def previous(self):
+    async def previous(self):
         print("PREVIOUS")
         if len(self.apps) > 0:
             self.apps[self.current_app].disable()
             self.current_app = (self.current_app - 1) % len(self.apps)
             self.apps[self.current_app].enable()
 
-    def exit(self):
+    async def exit(self):
         if len(self.apps) > 0:
             self.apps[self.current_app].disable()
             self.current_app = 0

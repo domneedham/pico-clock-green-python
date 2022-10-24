@@ -51,6 +51,7 @@ class Buttons:
         scheduler.schedule(SCHEDULER_BUTTON_PRESS, 1, self.millis_callback)
 
     def add_callback(self, number, callback, min=0, max=-1):
+        print("Adding callback on " + str(number))
         self.buttons[number - 1].add_callback(callback, min, max)
 
     def remove_callback(self, number, callback, min=0, max=-1):
@@ -62,7 +63,7 @@ class Buttons:
     def get_button(self, number):
         return self.buttons[number - 1]
 
-    def millis_callback(self):
+    async def millis_callback(self):
         for button in self.buttons:
             if len(button.callbacks) > 0:
                 if button.state == STATE_UNPRESSED and button.pin.value() == 0:
@@ -77,6 +78,6 @@ class Buttons:
                     for callback in button.callbacks:
                         if callback.min < press_duration and (
                                 callback.max == -1 or press_duration <= callback.max):
-                            callback.callback()
+                            await callback.callback()
                             break
                     button.pressed = int()

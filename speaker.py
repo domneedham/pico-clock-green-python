@@ -24,7 +24,7 @@ class Speaker:
         self.duration = 0
         self.buzz_start = 0
 
-    def beep_callback(self):
+    async def beep_callback(self):
         if self.buzz_start != 0:
             tm = time.ticks_ms()
             if time.ticks_diff(tm, self.buzz_start) > self.duration:

@@ -38,7 +38,7 @@ class Scheduler:
         while True:
             if task.cancelled:
                 break
-            task.callback()
+            await task.callback()
             await uasyncio.sleep_ms(task.duration)
 
     def schedule(self, name, duration, callback, initial_delay=0):
