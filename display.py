@@ -17,19 +17,14 @@ class Display:
         self.a0 = Pin(16, Pin.OUT)
         self.a1 = Pin(18, Pin.OUT)
         self.a2 = Pin(22, Pin.OUT)
-
         self.oe = Pin(13, Pin.OUT)
-
         self.sdi = Pin(11, Pin.OUT)
         self.clk = Pin(10, Pin.OUT)
         self.le = Pin(12, Pin.OUT)
-
         self.ain = ADC(26)
 
         self.row = 0
-        self.count = 0
         self.leds = [[0] * 32 for i in range(0, 8)]
-        self.leds_changed = False
         self.animating = False
         self.showing_time = False
         self.display_text_width = 32
@@ -48,7 +43,6 @@ class Display:
         self.scheduler.schedule(SCHEDULER_ENABLE_LEDS, 0, self.enable_leds)
 
     def enable_leds(self):
-        self.count += 1
         self.row = (self.row + 1) % 8
         led_row = self.leds[self.row]
         for col in range(32):
@@ -57,7 +51,6 @@ class Display:
             self.clk.value(1)
         self.le.value(1)
         self.le.value(0)
-        self.leds_changed = False
 
         self.a0.value(1 if self.row & 0x01 else 0)
         self.a1.value(1 if self.row & 0x02 else 0)
@@ -128,7 +121,6 @@ class Display:
             byte = char.rows[row - 1]
             for col in range(0, char.width):
                 self.leds[row][pos + col] = (byte >> col) % 2
-        self.leds_changed = True
 
     def show_text_for_period(self, text, pos=0, clear=True, display_period=5000):
         if self.animating:
@@ -137,8 +129,8 @@ class Display:
             return
 
         self.show_text(text, pos, clear)
-        self.display_queue_timer.init(period=display_period, mode=Timer.ONE_SHOT,
-                                      callback=self.process_callback_queue)
+        # self.display_queue_timer.init(period=display_period, mode=Timer.ONE_SHOT,
+        #                               callback=self.process_callback_queue)
 
     def show_text(self, text, pos=0, clear=True):
         if self.animating:
@@ -205,13 +197,11 @@ class Display:
         icon = self.Icons[name]
         for w in range(icon.width):
             self.leds[icon.y][icon.x + w] = 1
-        self.leds_changed = True
 
     def hide_icon(self, name):
         icon = self.Icons[name]
         for w in range(icon.width):
             self.leds[icon.y][icon.x + w] = 0
-        self.leds_changed = True
 
     def set_new_led_rows(self):
         # copy days of week led row

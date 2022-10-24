@@ -9,7 +9,7 @@ from pathlib import Path
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--device', action='store_true',
-                    default="/dev/cu.usbmodem14401")
+                    default="/dev/cu.usbmodem14101")
 args = parser.parse_args()
 
 CURRENT_DIR = Path(__file__).parent
