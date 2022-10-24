@@ -15,7 +15,7 @@ class Scheduler:
     def __init__(self):
         self.started = False
         self.schedules = []
-        self.display_schedule = []
+        self.display_task = None
         self.event_loop = uasyncio.get_event_loop()
 
     def start(self):
@@ -26,7 +26,7 @@ class Scheduler:
         _thread.start_new_thread(self._start_display, ())
 
     def _start_display(self):
-        self._start_display_task(self.display_schedule[0])
+        self._start_display_task(self.display_task)
 
     def _start_display_task(self, task: Schedule):
         while True:
@@ -44,7 +44,7 @@ class Scheduler:
     def schedule(self, name, duration, callback, initial_delay=0):
         task = self.Schedule(name, duration, callback, initial_delay)
         if task.name == SCHEDULER_ENABLE_LEDS:
-            self.display_schedule.append(task)
+            self.display_task = task
         else:
             self.schedules.append(task)
             if self.started:
