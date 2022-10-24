@@ -41,24 +41,24 @@ class Display:
 
         self.initialise_backlight()
         self.show_temperature_icon()
-        self.scheduler.schedule(SCHEDULER_ENABLE_LEDS, 0, self.enable_leds)
 
     def enable_leds(self):
-        self.row = (self.row + 1) % 8
-        led_row = self.leds[self.row]
-        for col in range(32):
-            self.clk.value(0)
-            self.sdi.value(led_row[col])
-            self.clk.value(1)
-        self.le.value(1)
-        self.le.value(0)
+        while True:
+            self.row = (self.row + 1) % 8
+            led_row = self.leds[self.row]
+            for col in range(32):
+                self.clk.value(0)
+                self.sdi.value(led_row[col])
+                self.clk.value(1)
+            self.le.value(1)
+            self.le.value(0)
 
-        self.a0.value(1 if self.row & 0x01 else 0)
-        self.a1.value(1 if self.row & 0x02 else 0)
-        self.a2.value(1 if self.row & 0x04 else 0)
-        self.oe.value(0)
-        sleep_us(self.backlight_sleep[self.current_backlight])
-        self.oe.value(1)
+            self.a0.value(1 if self.row & 0x01 else 0)
+            self.a1.value(1 if self.row & 0x02 else 0)
+            self.a2.value(1 if self.row & 0x04 else 0)
+            self.oe.value(0)
+            sleep_us(self.backlight_sleep[self.current_backlight])
+            self.oe.value(1)
 
     async def animate_text(self, text: str, delay=1000, clear=True):
         if self.animating:

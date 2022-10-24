@@ -51,7 +51,6 @@ class Buttons:
         scheduler.schedule(SCHEDULER_BUTTON_PRESS, 1, self.millis_callback)
 
     def add_callback(self, number, callback, min=0, max=-1):
-        print("Adding callback on " + str(number))
         self.buttons[number - 1].add_callback(callback, min, max)
 
     def remove_callback(self, number, callback, min=0, max=-1):
