@@ -20,22 +20,22 @@ class Clock(App):
         self.second = 0
         scheduler.schedule(SCHEDULER_CLOCK_SECOND, 1000, self.secs_callback)
 
-    def enable(self):
+    async def enable(self):
         self.enabled = True
-        self.update_time(force_show_time=True)
         self.buttons.add_callback(2, self.temp_callback, max=500)
         self.buttons.add_callback(
             2, self.switch_temperature_callback, min=500, max=5000)
         self.buttons.add_callback(3, self.backlight_callback, max=500)
         self.buttons.add_callback(
             3, self.switch_blink_callback, min=500, max=5000)
+        await self.update_time()
 
     def disable(self):
         self.enabled = False
 
-    def secs_callback(self):
+    async def secs_callback(self):
         if self.enabled:
-            self.update_time()
+            await self.update_time()
             if self.should_blink():
                 if self.second % 2 == 0:
                     # makes : display
@@ -47,23 +47,23 @@ class Clock(App):
     def should_blink(self):
         return self.config.blink_time_colon and not self.display.animating and self.display.showing_time
 
-    def update_time(self, force_show_time=False):
+    async def update_time(self):
         t = self.rtc.get_time()
         self.second = t[5]
-        if self.hour != t[3] or self.minute != t[4] or force_show_time:
+        if self.hour != t[3] or self.minute != t[4]:
             self.hour = t[3]
             self.minute = t[4]
             self.show_time_icon()
-            self.show_time()
             self.display.show_day(t[6])
+            await self.show_time()
         elif t[5] == 20:
-            self.show_temperature()
+            await self.show_temperature()
 
-    def show_time(self):
+    async def show_time(self, display_period=5000):
         hour = self.hour
         if self.config.clock_type == "12":
             hour = helpers.convert_twenty_four_to_twelve_hour(hour)
-        self.display.show_time("%02d:%02d" % (hour, self.minute))
+        await self.display.show_time("%02d:%02d" % (hour, self.minute), display_period=display_period)
 
     def show_time_icon(self):
         if self.hour >= 12:
@@ -73,19 +73,20 @@ class Clock(App):
             self.display.show_icon("AM")
             self.display.hide_icon("PM")
 
-    def show_temperature(self):
+    async def show_temperature(self):
         temp = self.rtc.get_temperature()
-        self.display.show_temperature(temp)
+        await self.display.show_temperature(temp)
 
-    def temp_callback(self):
-        self.show_temperature()
+    async def temp_callback(self):
+        print("Temp callback")
+        await self.show_temperature()
 
-    def switch_temperature_callback(self):
+    async def switch_temperature_callback(self):
         self.config.switch_temp_value()
         self.display.show_temperature_icon()
 
-    def backlight_callback(self):
+    async def backlight_callback(self):
         self.display.switch_backlight()
 
-    def switch_blink_callback(self):
+    async def switch_blink_callback(self):
         self.config.switch_blink_time_colon_value()

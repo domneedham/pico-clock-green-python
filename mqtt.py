@@ -55,13 +55,13 @@ class MQTT:
             self.lastping = time.ticks_ms()
         return
 
-    def scheduler_heartbeat_callback(self):
+    async def scheduler_heartbeat_callback(self):
         self.heartbeat(False)
 
-    def scheduler_mqtt_callback(self):
+    async def scheduler_mqtt_callback(self):
         self.client.check_msg()
 
-    def scheduler_mqtt_state(self):
+    async def scheduler_mqtt_state(self):
         self.send_state()
 
     def mqtt_callback(self, topic, msg):

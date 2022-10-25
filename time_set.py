@@ -59,11 +59,11 @@ class TimeSet(App):
             TimeSet.State("day", 13, "date", 2, -1, offset=1),
         ]
 
-    def enable(self):
+    async def enable(self):
         self.enabled = True
         self.state_index = 0
         self.state = self.states[self.state_index]
-        self.update_display()
+        await self.update_display()
         self.buttons.add_callback(2, self.up_callback, max=500)
         self.buttons.add_callback(3, self.down_callback, max=500)
 
@@ -72,48 +72,48 @@ class TimeSet(App):
         self.enabled = False
         self.state = None
 
-    def half_secs_callback(self):
+    async def half_secs_callback(self):
         if self.enabled:
             self.flash_count = (self.flash_count+1) % 3
             if self.flash_count == 2:
                 if self.state.length == 2:
-                    self.display.show_text("  ", pos=self.state.position)
+                    await self.display.show_text("  ", pos=self.state.position)
                 elif self.state.length == 4:
-                    self.display.show_text("    ", pos=self.state.position)
+                    await self.display.show_text("    ", pos=self.state.position)
                 self.flash_state = False
             else:
                 if not self.flash_state:
                     self.flash_state = True
                     if self.state.length == 2:
-                        self.display.show_text(
+                        await self.display.show_text(
                             "%02d" % self.time[self.state.index], pos=self.state.position)
                     elif self.state.length == 4:
-                        self.display.show_text(
+                        await self.display.show_text(
                             "%04d" % self.time[self.state.index], pos=self.state.position)
 
-    def mins_callback(self):
+    async def mins_callback(self):
         if self.enabled:
-            self.update_display()
+            await self.update_display()
 
-    def update_display(self):
+    async def update_display(self):
         self.time = self.rtc.get_time()
         self.display.reset()
         if self.state.panel == "time":
             t = self.rtc.get_time()
             now = "%02d:%02d" % (t[3], t[4])
-            self.display.show_text(now)
+            await self.display.show_text(now)
 
         elif self.state.panel == "year":
             t = self.rtc.get_time()
             now = "%04d" % (t[0])
-            self.display.show_text(now)
+            await self.display.show_text(now)
 
         elif self.state.panel == "date":
             t = self.rtc.get_time()
             now = "%02d/%02d" % (t[1], t[2])
-            self.display.show_text(now)
+            await self.display.show_text(now)
 
-    def up_callback(self):
+    async def up_callback(self):
         self.active = True
         t = list(self.rtc.get_time())
         max = self.state.max
@@ -126,9 +126,9 @@ class TimeSet(App):
                                self.state.offset) % max + self.state.offset
         self.rtc.save_time(tuple(t))
         self.flash_count = 0
-        self.update_display()
+        await self.update_display()
 
-    def down_callback(self):
+    async def down_callback(self):
         self.active = True
         t = list(self.rtc.get_time())
         max = self.state.max
@@ -141,9 +141,9 @@ class TimeSet(App):
                                self.state.offset) % max + self.state.offset
         self.rtc.save_time(tuple(t))
         self.flash_count = 0
-        self.update_display()
+        await self.update_display()
 
-    def top_button(self):
+    async def top_button(self):
         if self.state_index == len(self.states) - 1:
             self.disable()
         else:
@@ -151,4 +151,4 @@ class TimeSet(App):
             self.state_index = (self.state_index + 1) % len(self.states)
             self.state = self.states[self.state_index]
             self.display.reset()
-            self.update_display()
+            await self.update_display()

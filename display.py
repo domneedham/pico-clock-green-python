@@ -1,8 +1,9 @@
-from machine import Pin, ADC, Timer
-from constants import SCHEDULER_ANIMATION, SCHEDULER_ENABLE_LEDS, SCHEDULER_UPDATE_BACKLIGHT_VALUE
+from machine import Pin, ADC
+from constants import SCHEDULER_ANIMATION, SCHEDULER_UPDATE_BACKLIGHT_VALUE
+import uasyncio
 
 from util import partial, singleton
-from utime import sleep, sleep_ms, sleep_us
+from utime import sleep_us
 from configuration import Configuration
 import helpers
 
@@ -17,25 +18,19 @@ class Display:
         self.a0 = Pin(16, Pin.OUT)
         self.a1 = Pin(18, Pin.OUT)
         self.a2 = Pin(22, Pin.OUT)
-
         self.oe = Pin(13, Pin.OUT)
-
         self.sdi = Pin(11, Pin.OUT)
         self.clk = Pin(10, Pin.OUT)
         self.le = Pin(12, Pin.OUT)
-
         self.ain = ADC(26)
 
         self.row = 0
-        self.count = 0
         self.leds = [[0] * 32 for i in range(0, 8)]
-        self.leds_changed = False
         self.animating = False
         self.showing_time = False
         self.display_text_width = 32
         self.disp_offset = 2
         self.display_queue = []
-        self.display_queue_timer = Timer(-1)
         self.initialise_fonts()
         self.initialise_icons()
         self.initialise_days()
@@ -45,28 +40,27 @@ class Display:
 
         self.initialise_backlight()
         self.show_temperature_icon()
-        self.scheduler.schedule(SCHEDULER_ENABLE_LEDS, 0, self.enable_leds)
 
     def enable_leds(self):
-        self.count += 1
-        self.row = (self.row + 1) % 8
-        led_row = self.leds[self.row]
-        for col in range(32):
-            self.clk.value(0)
-            self.sdi.value(led_row[col])
-            self.clk.value(1)
-        self.le.value(1)
-        self.le.value(0)
-        self.leds_changed = False
+        while True:
+            self.row = (self.row + 1) % 8
+            led_row = self.leds[self.row]
+            for col in range(32):
+                self.clk.value(0)
+                self.sdi.value(led_row[col])
+                self.clk.value(1)
+            self.le.value(1)
+            self.le.value(0)
 
-        self.a0.value(1 if self.row & 0x01 else 0)
-        self.a1.value(1 if self.row & 0x02 else 0)
-        self.a2.value(1 if self.row & 0x04 else 0)
-        self.oe.value(0)
-        sleep_us(self.backlight_sleep[self.current_backlight])
-        self.oe.value(1)
+            self.a0.value(1 if self.row & 0x01 else 0)
+            self.a1.value(1 if self.row & 0x02 else 0)
+            self.a2.value(1 if self.row & 0x04 else 0)
 
-    def animate_text(self, text: str, delay=1000, clear=True):
+            self.oe.value(0)
+            sleep_us(self.backlight_sleep[self.current_backlight])
+            self.oe.value(1)
+
+    async def animate_text(self, text: str, delay=1000, clear=True):
         if self.animating:
             self.display_queue.append(
                 self.WaitForAnimation(self.animate_text, text, delay, clear=clear))
@@ -76,7 +70,7 @@ class Display:
         text = text + " "
         if clear:
             self.clear_text()
-        self.show_text(text)
+        await self.show_text(text)
         self.animate(delay)
 
     def animate(self, delay=1000):
@@ -85,7 +79,7 @@ class Display:
         self.scheduler.schedule(
             SCHEDULER_ANIMATION, 200, self.scroll_text_left, delay)
 
-    def scroll_text_left(self):
+    async def scroll_text_left(self):
         for row in range(8):
             led_row = self.leds[row]
             for col in range(self.display_text_width):
@@ -96,14 +90,14 @@ class Display:
         if self.runs == self.display_text_width - 5:  # account for whitespace
             self.animating = False
             self.scheduler.remove(SCHEDULER_ANIMATION)
-            self.process_callback_queue()
+            await self.process_callback_queue()
 
-    def process_callback_queue(self, *args):
+    async def process_callback_queue(self, *args):
         if len(self.display_queue) == 0:
             if not self.showing_time:
-                self.show_time()
+                await self.show_time()
         else:
-            self.display_queue[0].callback()
+            await self.display_queue[0].callback()
             self.display_queue.pop(0)
 
     def clear(self, x=0, y=0, w=24, h=7):
@@ -128,19 +122,18 @@ class Display:
             byte = char.rows[row - 1]
             for col in range(0, char.width):
                 self.leds[row][pos + col] = (byte >> col) % 2
-        self.leds_changed = True
 
-    def show_text_for_period(self, text, pos=0, clear=True, display_period=5000):
+    async def show_text_for_period(self, text, pos=0, clear=True, display_period=5000):
         if self.animating:
             self.display_queue.append(
                 self.WaitForAnimation(self.show_text_for_period, text, pos, display_period))
             return
 
-        self.show_text(text, pos, clear)
-        self.display_queue_timer.init(period=display_period, mode=Timer.ONE_SHOT,
-                                      callback=self.process_callback_queue)
+        await self.show_text(text, pos, clear)
+        await uasyncio.sleep_ms(display_period)
+        await self.process_callback_queue()
 
-    def show_text(self, text, pos=0, clear=True):
+    async def show_text(self, text, pos=0, clear=True):
         if self.animating:
             self.display_queue.append(
                 self.WaitForAnimation(self.show_text, text, pos))
@@ -179,13 +172,13 @@ class Display:
             width = self.ziku[c].width
             pos += width + 1
 
-    def show_time(self, time=None):
+    async def show_time(self, time=None, display_period=5000):
         self.showing_time = True
         if time != None:
             self.time = time
-        self.show_text_for_period(self.time)
+        await self.show_text_for_period(self.time, display_period=display_period)
 
-    def show_temperature(self, temp):
+    async def show_temperature(self, temp):
         self.showing_time = False
         symbol = ""
         if self.config.temp == "c":
@@ -194,24 +187,22 @@ class Display:
             temp = helpers.convert_celsius_to_temperature(temp)
             symbol = "°F"
         temp = str(temp)
-        self.animate_text(self.time + " " + temp +
-                          symbol, delay=0, clear=False)
+        await self.animate_text(self.time + " " + temp +
+                                symbol, delay=0, clear=False)
 
-    def show_message(self, text: str):
+    async def show_message(self, text: str):
         self.showing_time = False
-        self.show_text_for_period(text, display_period=8000)
+        await self.show_text_for_period(text, display_period=8000)
 
     def show_icon(self, name):
         icon = self.Icons[name]
         for w in range(icon.width):
             self.leds[icon.y][icon.x + w] = 1
-        self.leds_changed = True
 
     def hide_icon(self, name):
         icon = self.Icons[name]
         for w in range(icon.width):
             self.leds[icon.y][icon.x + w] = 0
-        self.leds_changed = True
 
     def set_new_led_rows(self):
         # copy days of week led row
@@ -255,15 +246,15 @@ class Display:
             self.auto_backlight = True
             self.update_auto_backlight_value()
             self.scheduler.schedule(
-                SCHEDULER_UPDATE_BACKLIGHT_VALUE, 1000, self.update_auto_backlight_value)
+                SCHEDULER_UPDATE_BACKLIGHT_VALUE, 1000, self.update_backlight_callback)
             self.config.update_autolight_value(True)
         else:
             self.current_backlight += 1
 
     def initialise_backlight(self):
         # CPU freq needs to be increase to 250 for better results
-        # From 10 (low) to 1500(High)
-        self.backlight_sleep = [10, 100, 300, 1500]
+        # From 10 (low) to 1250(High)
+        self.backlight_sleep = [10, 100, 300, 1250]
         self.current_backlight = 3
         self.auto_backlight = self.config.autolight
         self.update_auto_backlight_value()
@@ -271,7 +262,7 @@ class Display:
         if self.auto_backlight:
             self.show_icon("AutoLight")
             self.scheduler.schedule(
-                SCHEDULER_UPDATE_BACKLIGHT_VALUE, 1000, self.update_auto_backlight_value)
+                SCHEDULER_UPDATE_BACKLIGHT_VALUE, 1000, self.update_backlight_callback)
 
     def update_auto_backlight_value(self):
         aim = self.ain.read_u16()
@@ -283,6 +274,9 @@ class Display:
             self.current_backlight = 2
         else:
             self.current_backlight = 3
+
+    async def update_backlight_callback(self):
+        self.update_auto_backlight_value()
 
     def show_temperature_icon(self):
         if self.config.temp == "c":
@@ -357,7 +351,6 @@ class Display:
 
     def show_day(self, int):
         for key in self.days_of_week:
-
             if key == int:
                 self.show_icon(self.days_of_week[key])
             else:

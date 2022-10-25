@@ -13,6 +13,7 @@ class Scheduler:
     def __init__(self):
         self.started = False
         self.schedules = []
+        self.display_task = None
         self.event_loop = uasyncio.get_event_loop()
 
     def start(self):
@@ -26,13 +27,12 @@ class Scheduler:
         while True:
             if task.cancelled:
                 break
-            task.callback()
+            await task.callback()
             await uasyncio.sleep_ms(task.duration)
 
     def schedule(self, name, duration, callback, initial_delay=0):
         task = self.Schedule(name, duration, callback, initial_delay)
         self.schedules.append(task)
-
         if self.started:
             self.event_loop.create_task(self._start_task(task))
 
