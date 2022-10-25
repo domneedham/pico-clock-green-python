@@ -1,9 +1,9 @@
-from machine import Pin, ADC, Timer
-from constants import SCHEDULER_ANIMATION, SCHEDULER_ENABLE_LEDS, SCHEDULER_UPDATE_BACKLIGHT_VALUE
+from machine import Pin, ADC
+from constants import SCHEDULER_ANIMATION, SCHEDULER_UPDATE_BACKLIGHT_VALUE
 import uasyncio
 
 from util import partial, singleton
-from utime import sleep, sleep_ms, sleep_us
+from utime import sleep_us
 from configuration import Configuration
 import helpers
 
@@ -31,7 +31,6 @@ class Display:
         self.display_text_width = 32
         self.disp_offset = 2
         self.display_queue = []
-        self.display_queue_timer = Timer(-1)
         self.initialise_fonts()
         self.initialise_icons()
         self.initialise_days()
@@ -56,6 +55,7 @@ class Display:
             self.a0.value(1 if self.row & 0x01 else 0)
             self.a1.value(1 if self.row & 0x02 else 0)
             self.a2.value(1 if self.row & 0x04 else 0)
+
             self.oe.value(0)
             sleep_us(self.backlight_sleep[self.current_backlight])
             self.oe.value(1)
@@ -132,8 +132,6 @@ class Display:
         await self.show_text(text, pos, clear)
         await uasyncio.sleep_ms(display_period)
         await self.process_callback_queue()
-        # self.display_queue_timer.init(period=display_period, mode=Timer.ONE_SHOT,
-        #                               callback=self.process_callback_queue)
 
     async def show_text(self, text, pos=0, clear=True):
         if self.animating:
@@ -255,8 +253,8 @@ class Display:
 
     def initialise_backlight(self):
         # CPU freq needs to be increase to 250 for better results
-        # From 10 (low) to 1500(High)
-        self.backlight_sleep = [10, 100, 300, 1500]
+        # From 10 (low) to 1250(High)
+        self.backlight_sleep = [10, 100, 300, 1250]
         self.current_backlight = 3
         self.auto_backlight = self.config.autolight
         self.update_auto_backlight_value()
