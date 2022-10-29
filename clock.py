@@ -59,11 +59,11 @@ class Clock(App):
         elif t[5] == 20:
             await self.show_temperature()
 
-    async def show_time(self, display_period=5000):
+    async def show_time(self):
         hour = self.hour
         if self.config.clock_type == "12":
             hour = helpers.convert_twenty_four_to_twelve_hour(hour)
-        await self.display.show_time("%02d:%02d" % (hour, self.minute), display_period=display_period)
+        await self.display.show_time("%02d:%02d" % (hour, self.minute))
 
     def show_time_icon(self):
         if self.hour >= 12:
@@ -78,7 +78,6 @@ class Clock(App):
         await self.display.show_temperature(temp)
 
     async def temp_callback(self):
-        print("Temp callback")
         await self.show_temperature()
 
     async def switch_temperature_callback(self):

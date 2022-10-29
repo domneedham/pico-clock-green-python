@@ -136,7 +136,7 @@ class Display:
     async def show_text(self, text, pos=0, clear=True):
         if self.animating:
             self.display_queue.append(
-                self.WaitForAnimation(self.show_text, text, pos))
+                self.WaitForAnimation(self.show_text, text, pos, clear))
             return
 
         if clear:
@@ -172,11 +172,11 @@ class Display:
             width = self.ziku[c].width
             pos += width + 1
 
-    async def show_time(self, time=None, display_period=5000):
+    async def show_time(self, time=None):
         self.showing_time = True
         if time != None:
             self.time = time
-        await self.show_text_for_period(self.time, display_period=display_period)
+        await self.show_text(self.time)
 
     async def show_temperature(self, temp):
         self.showing_time = False
@@ -192,7 +192,10 @@ class Display:
 
     async def show_message(self, text: str):
         self.showing_time = False
-        await self.show_text_for_period(text, display_period=8000)
+        if len(text) > 3:
+            await self.animate_text(text)
+        else:
+            await self.show_text_for_period(text, display_period=8000)
 
     def show_icon(self, name):
         icon = self.Icons[name]
