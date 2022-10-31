@@ -29,6 +29,7 @@ class Clock(App):
         self.buttons.add_callback(
             3, self.switch_blink_callback, min=500, max=5000)
         await self.update_time()
+        await self.show_time()
 
     def disable(self):
         self.enabled = False
