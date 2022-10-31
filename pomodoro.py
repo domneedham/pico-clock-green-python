@@ -54,7 +54,8 @@ class Pomodoro(App):
             now = int(self._time_left())
             self.minutes = now // 60
             self.time_left = None
-        self.minutes -= 1
+        if self.minutes > 1:
+            self.minutes -= 1
         await self.update_pomodoro_duration()
 
     async def update_pomodoro_duration(self):
