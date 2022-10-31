@@ -40,8 +40,9 @@ class Apps:
 
         app = self.apps[self.current_app]
         if app.active and app.grab_top_button:
-            app.top_button()
-            return
+            should_go_next: bool = await app.top_button()
+            if not should_go_next:
+                return
 
         self.apps[self.current_app].disable()
         self.buttons.clear_callbacks(2)
@@ -49,7 +50,7 @@ class Apps:
         self.display.clear_text()
         self.current_app = (self.current_app + 1) % len(self.apps)
         print("SWITCHING TO", self.apps[self.current_app].name)
-        self.speaker.beep(200)
+        # self.speaker.beep(200)
         await self.apps[self.current_app].enable()
 
     async def previous(self):

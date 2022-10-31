@@ -3,6 +3,7 @@ from buttons import Buttons
 from constants import APP_TIME_SET, SCHEDULER_TIME_SET_HALF_SECOND, SCHEDULER_TIME_SET_MINUTE
 from display import Display
 from rtc import RTC
+import uasyncio
 
 month_max = {
     1: 31,  # January
@@ -40,6 +41,7 @@ class TimeSet(App):
         self.rtc = RTC()
         self.grab_top_button = True
         self.enabled = False
+        self.active = False
         self.state = None
         self.state_index = -1
         self.flash_count = 0
@@ -60,6 +62,7 @@ class TimeSet(App):
         ]
 
     async def enable(self):
+        self.active = True
         self.enabled = True
         self.state_index = 0
         self.state = self.states[self.state_index]
@@ -102,19 +105,16 @@ class TimeSet(App):
             t = self.rtc.get_time()
             now = "%02d:%02d" % (t[3], t[4])
             await self.display.show_text(now)
-
         elif self.state.panel == "year":
             t = self.rtc.get_time()
             now = "%04d" % (t[0])
             await self.display.show_text(now)
-
         elif self.state.panel == "date":
             t = self.rtc.get_time()
             now = "%02d/%02d" % (t[1], t[2])
             await self.display.show_text(now)
 
     async def up_callback(self):
-        self.active = True
         t = list(self.rtc.get_time())
         max = self.state.max
         if max == -1:
@@ -129,7 +129,6 @@ class TimeSet(App):
         await self.update_display()
 
     async def down_callback(self):
-        self.active = True
         t = list(self.rtc.get_time())
         max = self.state.max
         if max == -1:
@@ -146,9 +145,13 @@ class TimeSet(App):
     async def top_button(self):
         if self.state_index == len(self.states) - 1:
             self.disable()
+            await self.display.show_text("DONE")
+            await uasyncio.sleep(2)
+            return True
         else:
             self.flash_count = 0
             self.state_index = (self.state_index + 1) % len(self.states)
             self.state = self.states[self.state_index]
             self.display.reset()
             await self.update_display()
+            return False
