@@ -21,9 +21,10 @@ class Apps:
         self.speaker = Speaker(scheduler)
         self.apps = []
         self.current_app = 0
-        self.buttons.add_callback(1, self.next, max=500)
-        self.buttons.add_callback(1, self.previous, min=500)
-        self.buttons.add_callback(1, self.exit, min=500)
+        self.buttons.add_callback(1, self.next, min=500)
+        self.buttons.add_callback(1, self.app_top_button, max=500)
+        # self.buttons.add_callback(1, self.previous, min=500)
+        # self.buttons.add_callback(1, self.exit, min=500)
 
     async def start(self):
         await self.apps[0].enable()
@@ -39,10 +40,6 @@ class Apps:
             return
 
         app = self.apps[self.current_app]
-        if app.active and app.grab_top_button:
-            should_go_next: bool = await app.top_button()
-            if not should_go_next:
-                return
 
         self.apps[self.current_app].disable()
         self.buttons.clear_callbacks(2)
@@ -53,15 +50,25 @@ class Apps:
         # self.speaker.beep(200)
         await self.apps[self.current_app].enable()
 
-    async def previous(self):
-        print("PREVIOUS")
-        if len(self.apps) > 0:
-            self.apps[self.current_app].disable()
-            self.current_app = (self.current_app - 1) % len(self.apps)
-            self.apps[self.current_app].enable()
+    async def app_top_button(self):
+        app = self.apps[self.current_app]
 
-    async def exit(self):
-        if len(self.apps) > 0:
-            self.apps[self.current_app].disable()
-            self.current_app = 0
-            self.apps[self.current_app].enable()
+        if app.active and app.grab_top_button:
+            should_go_next: bool = await app.top_button()
+            if should_go_next:
+                await self.next()
+            else:
+                return
+
+    # async def previous(self):
+    #     print("PREVIOUS")
+    #     if len(self.apps) > 0:
+    #         self.apps[self.current_app].disable()
+    #         self.current_app = (self.current_app - 1) % len(self.apps)
+    #         self.apps[self.current_app].enable()
+
+    # async def exit(self):
+    #     if len(self.apps) > 0:
+    #         self.apps[self.current_app].disable()
+    #         self.current_app = 0
+    #         self.apps[self.current_app].enable()
