@@ -1,17 +1,12 @@
-# MicroPython Pico-Clock-Green example
+# MicroPython Pico-Clock-Green
 
-Python port of the C code for the Waveshare [Pico-Clock-Green](https://www.waveshare.com/wiki/Pico-Clock-Green) product.
+Python port of the C code for the Waveshare [Pico-Clock-Green](https://www.waveshare.com/wiki/Pico-Clock-Green) product with support for MQTT (majority to be added) via the Pico W.
 
-The code will be appended to support the Pico W and MQTT, so you can control it from smart home platforms such as Home Assistant.
+> The original Python code of this project written by Malcolm and contributors ([GitHub link](https://github.com/malcolmholmes/pico-clock-green-python)). This will be a maintained fork with lots of more features added.
 
-> **Status**: The next big change will to be include the uasyncio library to (hopefully) improve performance.
+## Development
 
-> **Status**: So far, the code in this repo covers much of the basics, but the
-> core functionality of the clock (alarms) remains to be
-> implemented.
-
-> **Status**: This code is changing a lot at present, as all the necessary features
-> are added. Please expect change, and please expect classes and APIs to change.
+This code is changing a lot at present, as all the necessary features are added. Please expect change, and please expect classes and APIs to change.
 
 ## Instructions (Linux/Mac)
 
