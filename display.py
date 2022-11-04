@@ -1,7 +1,7 @@
 from machine import Pin, ADC
 from constants import SCHEDULER_ANIMATION, SCHEDULER_UPDATE_BACKLIGHT_VALUE
 import uasyncio
-
+import time
 from util import partial, singleton
 from utime import sleep_us
 from configuration import Configuration
@@ -265,6 +265,7 @@ class Display:
         self.current_backlight = 3
         self.auto_backlight = self.config.autolight
         self.update_auto_backlight_value()
+        self.last_backlight_update = time.ticks_ms()
 
         if self.auto_backlight:
             self.show_icon("AutoLight")
@@ -272,18 +273,26 @@ class Display:
                 SCHEDULER_UPDATE_BACKLIGHT_VALUE, 1000, self.update_backlight_callback)
 
     def update_auto_backlight_value(self):
+        backlight = 0
         aim = self.ain.read_u16()
         if aim > 65000:  # Low light
-            self.current_backlight = 0
+            backlight = 0
         elif aim > 60000:
-            self.current_backlight = 1
+            backlight = 1
         elif aim > 40000:
-            self.current_backlight = 2
+            backlight = 2
         else:
-            self.current_backlight = 3
+            backlight = 3
+
+        if backlight != self.current_backlight:
+            self.current_backlight = backlight
+            self.last_backlight_update = time.ticks_ms()
 
     async def update_backlight_callback(self):
-        self.update_auto_backlight_value()
+        tm = time.ticks_ms()
+        difference = time.ticks_diff(tm, self.last_backlight_update)
+        if difference > 3000:
+            self.update_auto_backlight_value()
 
     def show_temperature_icon(self):
         if self.config.temp == "c":
