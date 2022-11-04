@@ -21,54 +21,64 @@ class Apps:
         self.speaker = Speaker(scheduler)
         self.apps = []
         self.current_app = 0
-        self.buttons.add_callback(1, self.next, min=500)
+        self.buttons.add_callback(1, self.app_chooser, min=500)
         self.buttons.add_callback(1, self.app_top_button, max=500)
-        # self.buttons.add_callback(1, self.previous, min=500)
-        # self.buttons.add_callback(1, self.exit, min=500)
 
     async def start(self):
         await self.apps[0].enable()
 
     def add(self, app):
-        # if len(self.apps) == 0:
-        #     await app.enable()
         self.apps.append(app)
 
-    async def next(self):
-        print("NEXT")
+    async def app_chooser(self):
+        print("APP CHOOSER")
         if len(self.apps) == 0:
             return
 
-        app = self.apps[self.current_app]
+        await self.disable_current_app()
 
-        self.apps[self.current_app].disable()
+        self.buttons.add_callback(2, self.next_app, max=500)
+        self.buttons.add_callback(3, self.previous_app, max=500)
+
+        await self.show_current_app_name()
+
+    async def enable_current_app(self):
         self.buttons.clear_callbacks(2)
         self.buttons.clear_callbacks(3)
         self.display.clear_text()
-        self.current_app = (self.current_app + 1) % len(self.apps)
         print("SWITCHING TO", self.apps[self.current_app].name)
         # self.speaker.beep(200)
         await self.apps[self.current_app].enable()
 
+    async def disable_current_app(self):
+        app = self.apps[self.current_app]
+        app.disable()
+        app.active = False
+        app.grab_top_button = False
+        self.buttons.clear_callbacks(2)
+        self.buttons.clear_callbacks(3)
+
+    async def show_current_app_name(self):
+        app = self.apps[self.current_app]
+        self.display.display_queue.clear()
+        await self.display.animate_text(app.name, force=True)
+        await self.display.show_text(app.name)
+
+    async def next_app(self):
+        self.current_app = (self.current_app + 1) % len(self.apps)
+        await self.show_current_app_name()
+
+    async def previous_app(self):
+        self.current_app = (self.current_app - 1) % len(self.apps)
+        await self.show_current_app_name()
+
     async def app_top_button(self):
         app = self.apps[self.current_app]
-
         if app.active and app.grab_top_button:
             should_go_next: bool = await app.top_button()
             if should_go_next:
-                await self.next()
+                await self.app_chooser()
             else:
                 return
-
-    # async def previous(self):
-    #     print("PREVIOUS")
-    #     if len(self.apps) > 0:
-    #         self.apps[self.current_app].disable()
-    #         self.current_app = (self.current_app - 1) % len(self.apps)
-    #         self.apps[self.current_app].enable()
-
-    # async def exit(self):
-    #     if len(self.apps) > 0:
-    #         self.apps[self.current_app].disable()
-    #         self.current_app = 0
-    #         self.apps[self.current_app].enable()
+        else:
+            await self.enable_current_app()

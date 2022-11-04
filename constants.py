@@ -39,6 +39,6 @@ SCHEDULER_TIME_SET_MINUTE = "time-set-minute"
 
 
 # App names
-APP_CLOCK = "Clock"
-APP_POMODORO = "Pomodoro"
-APP_TIME_SET = "Time Set"
+APP_CLOCK = "CLOCK"
+APP_POMODORO = "POMODORO"
+APP_TIME_SET = "TIME SET"
