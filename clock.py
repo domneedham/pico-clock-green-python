@@ -30,6 +30,7 @@ class Clock(App):
             3, self.switch_blink_callback, min=500, max=5000)
         await self.update_time()
         await self.show_time()
+        self.display.show_temperature_icon()
 
     def disable(self):
         self.enabled = False
