@@ -66,6 +66,7 @@ class TimeSet(App):
         self.enabled = True
         self.state_index = 0
         self.state = self.states[self.state_index]
+        self.display.hide_temperature_icons()
         await self.update_display()
         self.buttons.add_callback(2, self.up_callback, max=500)
         self.buttons.add_callback(3, self.down_callback, max=500)

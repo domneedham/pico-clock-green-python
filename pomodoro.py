@@ -27,12 +27,15 @@ class Pomodoro(App):
         self.active = True
         self.buttons.add_callback(2, self.up_callback, max=500)
         self.buttons.add_callback(3, self.down_callback, max=500)
+        self.display.hide_temperature_icons()
+        self.display.show_icon("CountDown")
         await self.show_time(self.pomodoro_duration)
 
     def disable(self):
         self.enabled = False
         self.started = False
         self.start_time = None
+        self.display.hide_icon("CountDown")
 
     async def top_button(self):
         if self.enabled and self.started:

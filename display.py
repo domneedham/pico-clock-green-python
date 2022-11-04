@@ -207,6 +207,10 @@ class Display:
         for w in range(icon.width):
             self.leds[icon.y][icon.x + w] = 0
 
+    def hide_temperature_icons(self):
+        self.hide_icon("°F")
+        self.hide_icon("°C")
+
     def set_new_led_rows(self):
         # copy days of week led row
         day_of_week_row = self.leds[0]
