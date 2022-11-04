@@ -59,9 +59,10 @@ class Apps:
         self.buttons.clear_callbacks(3)
 
     async def show_current_app_name(self):
+        app = self.apps[self.current_app]
         self.display.display_queue.clear()
-        await self.display.animate_text(self.apps[self.current_app].name.upper(), force=True)
-        await self.display.show_text(self.apps[self.current_app].name.upper())
+        await self.display.animate_text(app.name, force=True)
+        await self.display.show_text(app.name)
 
     async def next_app(self):
         self.current_app = (self.current_app + 1) % len(self.apps)
