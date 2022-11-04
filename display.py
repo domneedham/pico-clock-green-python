@@ -60,8 +60,8 @@ class Display:
             sleep_us(self.backlight_sleep[self.current_backlight])
             self.oe.value(1)
 
-    async def animate_text(self, text: str, delay=1000, clear=True):
-        if self.animating:
+    async def animate_text(self, text: str, delay=1000, clear=True, force=False):
+        if self.animating and not force:
             self.display_queue.append(
                 self.WaitForAnimation(self.animate_text, text, delay, clear=clear))
             return
