@@ -45,6 +45,7 @@ class Apps:
     async def enable_current_app(self):
         self.buttons.clear_callbacks(2)
         self.buttons.clear_callbacks(3)
+        self.display.display_queue.clear()
         self.display.clear_text()
         print("SWITCHING TO", self.apps[self.current_app].name)
         # self.speaker.beep(200)

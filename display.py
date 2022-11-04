@@ -87,7 +87,7 @@ class Display:
                     self.leds[row][col-1] = led_row[col]
         self.runs += 1
 
-        if self.runs == self.display_text_width - 5:  # account for whitespace
+        if self.runs == self.display_text_width - 3:  # account for whitespace
             self.animating = False
             self.scheduler.remove(SCHEDULER_ANIMATION)
             await self.process_callback_queue()
@@ -409,7 +409,7 @@ class Display:
             # temp symbol
             "°": self.Character(width=2, rows=[0x03, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00]),
             # space
-            " ": self.Character(width=4, rows=[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]),
+            " ": self.Character(width=2, rows=[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]),
             ".": self.Character(width=1, rows=[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01]),
             "-": self.Character(width=2, rows=[0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00]),
             "/": self.Character(width=2, rows=[0x02, 0x02, 0x02, 0x01, 0x01, 0x01, 0x01, 0x01]),
