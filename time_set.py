@@ -54,6 +54,7 @@ class TimeSet(App):
 
     def initialise_states(self):
         self.states = [
+            TimeSet.State("dow", 0, "dow", 6, 7, length=7, offset=0),
             TimeSet.State("hours", 0, "time", 3, 24),
             TimeSet.State("minutes", 13, "time", 4, 60),
             TimeSet.State("year", 0, "year", 0, 3000, length=4),
@@ -114,6 +115,14 @@ class TimeSet(App):
             t = self.rtc.get_time()
             now = "%02d/%02d" % (t[1], t[2])
             await self.display.show_text(now)
+        elif self.state.panel == "dow":
+            print ("Entering Day-of-week panel!")
+            t = self.rtc.get_time()
+            now = self.display.days_of_week[t[6]].upper()
+            print ("Day of week: %s" % now)
+            # "" % (self.display.days_of_week[ t[6] ])
+            await self.display.show_text(now)
+            self.display.show_day(t[6])
 
     async def up_callback(self):
         t = list(self.rtc.get_time())
