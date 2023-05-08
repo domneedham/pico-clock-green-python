@@ -6,9 +6,12 @@
     "autolight": false
   },
   "wifiConfig": {
-    "enabled": false,
+    "enabled": true,
+    "hostname": "pico-clock-green",
     "ssid": "",
-    "passphrase": ""
+    "passphrase": "",
+    "ntpEnabled": true,
+    "ntpPTZ": "GMT0"
   },
   "mqttConfig": {
     "enabled": false,

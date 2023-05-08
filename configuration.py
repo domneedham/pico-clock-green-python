@@ -1,4 +1,4 @@
-from constants import CONFIGURATION_FILE, CONFIGURATION_RUN_AUTOLIGHT, CONFIGURATION_RUN_BLINK_TIME_COLON, CONFIGURATION_RUN_CLOCK_TYPE, CONFIGURATION_MQTT_BROKER, CONFIGURATION_MQTT_CONFIG, CONFIGURATION_MQTT_ENABLED, CONFIGURATION_MQTT_PREFIX, CONFIGURATION_RUN_CONFIG, CONFIGURATION_RUN_TEMP, CONFIGURATION_WIFI_CONFIG, CONFIGURATION_WIFI_ENABLED, CONFIGURATION_WIFI_PASSPHRASE, CONFIGURATION_WIFI_SSID
+from constants import CONFIGURATION_FILE, CONFIGURATION_RUN_AUTOLIGHT, CONFIGURATION_RUN_BLINK_TIME_COLON, CONFIGURATION_RUN_CLOCK_TYPE, CONFIGURATION_MQTT_BROKER, CONFIGURATION_MQTT_CONFIG, CONFIGURATION_MQTT_ENABLED, CONFIGURATION_MQTT_PREFIX, CONFIGURATION_RUN_CONFIG, CONFIGURATION_RUN_TEMP, CONFIGURATION_WIFI_CONFIG, CONFIGURATION_WIFI_ENABLED, CONFIGURATION_WIFI_HOSTNAME, CONFIGURATION_WIFI_SSID, CONFIGURATION_WIFI_PASSPHRASE, CONFIGURATION_WIFI_NTP_ENABLED, CONFIGURATION_WIFI_NTP_PTZ
 from util import singleton
 from helpers import read_json_file, write_json_file
 
@@ -6,10 +6,13 @@ from helpers import read_json_file, write_json_file
 @singleton
 class Configuration:
     class WifiConfiguration:
-        def __init__(self, enabled: bool, ssid: str, passphrase: str) -> None:
+        def __init__(self, enabled: bool, hostname: str, ssid: str, passphrase: str, ntp_enabled: bool, ntp_ptz: str) -> None:
             self.enabled = enabled
+            self.hostname = hostname
             self.ssid = ssid
             self.passphrase = passphrase
+            self.ntp_enabled = ntp_enabled
+            self.ntp_ptz = ntp_ptz
 
     class MQTTConfiguration:
         def __init__(self, enabled: bool, broker: str, prefix: str) -> None:
@@ -38,8 +41,11 @@ class Configuration:
 
         self.wifi_config = self.WifiConfiguration(
             enabled=self.config[CONFIGURATION_WIFI_CONFIG][CONFIGURATION_WIFI_ENABLED],
+            hostname=self.config[CONFIGURATION_WIFI_CONFIG][CONFIGURATION_WIFI_HOSTNAME],
             ssid=self.config[CONFIGURATION_WIFI_CONFIG][CONFIGURATION_WIFI_SSID],
-            passphrase=self.config[CONFIGURATION_WIFI_CONFIG][CONFIGURATION_WIFI_PASSPHRASE]
+            passphrase=self.config[CONFIGURATION_WIFI_CONFIG][CONFIGURATION_WIFI_PASSPHRASE],
+            ntp_enabled=self.config[CONFIGURATION_WIFI_CONFIG][CONFIGURATION_WIFI_NTP_ENABLED],
+            ntp_ptz=self.config[CONFIGURATION_WIFI_CONFIG][CONFIGURATION_WIFI_NTP_PTZ]
         )
 
         self.mqtt_config = self.MQTTConfiguration(
