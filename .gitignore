@@ -1,4 +1,9 @@
-LASTRUN
+# Virtual enviroment
 venv
-configuration_old.py
-lib/
+
+# Pico-W-Go
+.picowgo
+.vscode/
+
+# Config file
+config.json
