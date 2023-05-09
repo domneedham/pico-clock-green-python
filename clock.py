@@ -58,7 +58,7 @@ class Clock(App):
             self.show_time_icon()
             self.display.show_day(t[6])
             await self.show_time()
-        elif t[5] == 20:
+        elif t[5] == 20 and self.config.show_temp:
             await self.show_temperature()
 
     async def show_time(self):
@@ -68,12 +68,13 @@ class Clock(App):
         await self.display.show_time("%02d:%02d" % (hour, self.minute))
 
     def show_time_icon(self):
-        if self.hour >= 12:
-            self.display.show_icon("PM")
-            self.display.hide_icon("AM")
-        else:
-            self.display.show_icon("AM")
-            self.display.hide_icon("PM")
+        if self.config.clock_type == "12":
+            if self.hour >= 12:
+                self.display.show_icon("PM")
+                self.display.hide_icon("AM")
+            else:
+                self.display.show_icon("AM")
+                self.display.hide_icon("PM")
 
     async def show_temperature(self):
         temp = self.rtc.get_temperature()

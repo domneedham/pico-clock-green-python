@@ -3,10 +3,11 @@
     "blinkTimeColon": true,
     "temp": "c",
     "clockType": "24",
-    "autolight": false
+    "showTemp": true,
+    "autolight": true
   },
   "wifiConfig": {
-    "enabled": true,
+    "enabled": false,
     "hostname": "pico-clock-green",
     "ssid": "",
     "passphrase": "",
