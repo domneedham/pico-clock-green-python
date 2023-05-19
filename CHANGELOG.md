@@ -1,5 +1,8 @@
 # Change Log
 
+- **2023/05/09**: Fix weekdays
+- **2023/05/08**: Add ntp config and [localPTZtime](https://github.com/bellingeri/localPTZtime)
+
 ## Pre Fork
 
 - **2021/10/05**: Unified interface for the app classes

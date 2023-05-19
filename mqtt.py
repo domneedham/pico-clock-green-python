@@ -3,7 +3,6 @@ import json
 from configuration import Configuration
 from constants import SCHEDULER_MQTT_CHECK, SCHEDULER_MQTT_HEARTBEAT, SCHEDULER_MQTT_STATE
 from scheduler import Scheduler
-from configuration_old import mqtt_server, mqtt_prefix, mqtt_base_topic
 from util import singleton
 
 

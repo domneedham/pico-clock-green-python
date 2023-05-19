@@ -3,12 +3,16 @@
     "blinkTimeColon": true,
     "temp": "c",
     "clockType": "24",
-    "autolight": false
+    "showTemp": true,
+    "autolight": true
   },
   "wifiConfig": {
     "enabled": false,
+    "hostname": "pico-clock-green",
     "ssid": "",
-    "passphrase": ""
+    "passphrase": "",
+    "ntpEnabled": true,
+    "ntpPTZ": "GMT0"
   },
   "mqttConfig": {
     "enabled": false,
