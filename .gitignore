@@ -6,4 +6,6 @@ venv
 .vscode/
 
 # Config file
+configuration_old.py
+lib/
 config.json

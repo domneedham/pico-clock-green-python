@@ -19,6 +19,7 @@ class WLAN:
             self.connect_to_wifi()
 
     def connect_to_wifi(self):
+        import network
         print("Connecting to WiFi")
         #network.hostname(self.configuration.hostname)
         self.wlan = network.WLAN(network.STA_IF)
@@ -29,7 +30,7 @@ class WLAN:
                           self.configuration.passphrase)
 
         # Wait for connect or fail
-        max_wait = 10
+        max_wait = 20
         while max_wait > 0:
             if self.wlan.status() < 0 or self.wlan.status() >= 3:
                 break
