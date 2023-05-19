@@ -240,6 +240,7 @@ class Display:
         self.leds[0][2] = 0
         self.leds[0][5] = 0
 
+    # this is called whenever the user presses the "light" button to switch to a different setting
     def switch_backlight(self):
         if self.auto_backlight:
             self.auto_backlight = False
@@ -248,7 +249,7 @@ class Display:
             self.scheduler.remove(
                 SCHEDULER_UPDATE_BACKLIGHT_VALUE)
             self.config.update_autolight_value(False)
-        elif self.current_backlight == 3:
+        elif self.current_backlight == len(self.backlight_sleep)-1:
             self.show_icon("AutoLight")
             self.auto_backlight = True
             self.update_auto_backlight_value()
@@ -261,8 +262,8 @@ class Display:
     def initialise_backlight(self):
         # CPU freq needs to be increase to 250 for better results
         # From 10 (low) to 1250(High)
-        self.backlight_sleep = [10, 100, 300, 1250]
-        self.current_backlight = 3
+        self.backlight_sleep = [10, 100, 300, 400, 700, 1250, 2000]
+        self.current_backlight = 6
         self.auto_backlight = self.config.autolight
         self.update_auto_backlight_value()
         self.last_backlight_update = time.ticks_ms()
