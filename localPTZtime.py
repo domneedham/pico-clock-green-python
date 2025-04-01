@@ -14,9 +14,11 @@
 			initial release
 	0.0.2
 			changed returned format
+	0.0.3
+			fixed bug in leap year calculation
 """
 
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 
 
 import time
@@ -257,7 +259,12 @@ def _parseposixtransition(transition: str, year: int):
 				month_days[1] = 29
 
 			# calculate the number of days since 1/1/base_year
-			days_since_base_date = (year - base_year) * 365 + (year - base_year - 1) // 4
+			days_since_base_date = (year - base_year) * 365
+
+			for y in range(base_year, year):
+				if ((((y % 4) == 0) and ((y % 100) != 0)) or (y % 400) == 0):
+					days_since_base_date += 1
+
 			days_since_base_date += sum(month_days[:month - 1])
 
 			# calculate the day of the week for the first day of month
