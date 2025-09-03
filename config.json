@@ -17,6 +17,8 @@
   "mqttConfig": {
     "enabled": false,
     "broker": "",
-    "prefix": ""
+    "prefix": "",
+    "username": "",
+    "password": ""
   }
 }
