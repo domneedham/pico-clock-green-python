@@ -26,8 +26,18 @@ class MQTT:
         self.configuration = Configuration().mqtt_config
         if self.configuration.enabled:
             from umqtt.simple import MQTTClient
-            self.client = MQTTClient(self.configuration.prefix, self.configuration.broker, user=None,
-                                     password=None, keepalive=300, ssl=False, ssl_params={})
+
+            if self.configuration.username != "":
+                user = self.configuration.username
+            else:
+                user = None
+            if self.configuration.password != "":
+                password = self.configuration.password
+            else:
+                password = None
+
+            self.client = MQTTClient(self.configuration.prefix, self.configuration.broker, user=user,
+                                     password=password, keepalive=300, ssl=False, ssl_params={})
             self.connect()
             scheduler.schedule(SCHEDULER_MQTT_HEARTBEAT, 250,
                                self.scheduler_heartbeat_callback)
